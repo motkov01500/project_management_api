@@ -6,6 +6,7 @@
   <persistence-unit name="persistence">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <jta-data-source>jdbc/persistence</jta-data-source>
+
     <properties>
       <property name="hibernate.type.xml_format_mapper" value="jaxb"/>
       <property name="hibernate.type.json_format_mapper" value="jsonb"/>

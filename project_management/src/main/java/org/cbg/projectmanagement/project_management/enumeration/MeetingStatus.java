@@ -3,12 +3,12 @@ package org.cbg.projectmanagement.project_management.enumeration;
 import lombok.Getter;
 
 @Getter
-public enum TaskStatusEnum {
-    D("Done"),I("In progress"),O("Open"),R("Reopened");
+public enum MeetingStatus {
+    UPCOMING("UPCOMING"), START("START"), END("END");
 
     private String name;
 
-    TaskStatusEnum(String name) {
+    MeetingStatus(String name) {
         this.name = name;
     }
 }
