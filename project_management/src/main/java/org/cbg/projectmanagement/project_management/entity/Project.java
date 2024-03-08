@@ -11,11 +11,11 @@ import java.io.Serializable;
 import java.util.Set;
 
 @Entity
-@Table(name = "project", schema = "public")
+@Table(name = "project")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Project implements Serializable {
+public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_id_generator")

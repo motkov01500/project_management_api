@@ -19,15 +19,11 @@ public class UserRepository extends  BaseRepository<User> {
         return User.class.getSimpleName();
     }
 
-    public User getUserByUsername(String username) throws NotFoundResourceException {
+    public Optional<User> getUserByUsername(String username) throws NotFoundResourceException {
         String query = "from User WHERE username = :username";
         Map<String, Object> criteria  = new HashMap<>();
         criteria.put("username", username);
         List<User> userList = getEntityByCriteria(query,criteria);
-        if(userList.isEmpty()) {
-            throw new NotFoundResourceException("test",
-                    Response.status(Response.Status.NOT_FOUND).entity("Not Found").build());
-        }
-        return userList.get(0);
+        return Optional.ofNullable(userList.get(0));
     }
 }

@@ -15,7 +15,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Task implements Serializable {
+public class Task  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_generator")

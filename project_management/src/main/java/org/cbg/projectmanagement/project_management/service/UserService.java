@@ -3,7 +3,6 @@ package org.cbg.projectmanagement.project_management.service;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
-import org.cbg.projectmanagement.project_management.auth.AuthService;
 import org.cbg.projectmanagement.project_management.entity.Role;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
@@ -13,6 +12,7 @@ import org.cbg.projectmanagement.project_management.request.UserRequest;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
+import java.util.Optional;
 
 @Named("UserService")
 public class UserService {
@@ -36,8 +36,9 @@ public class UserService {
         userRepository.create(user);
     }
 
-    public User getUserByUsername(String username) throws NotFoundResourceException {
-        return userRepository.getUserByUsername(username);
+    public Optional<User> getUserByUsername(String username) throws NotFoundResourceException {
+        return userRepository
+                .getUserByUsername(username);
     }
 
     public User findUserById(Long id) {
@@ -57,6 +58,10 @@ public class UserService {
     }
 
     public String hashPassword(String password) {
-        return BCrypt.hashpw(password,BCrypt.gensalt());
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    public boolean checkPassword(String password, String hashed) {
+        return BCrypt.checkpw(password, hashed);
     }
 }

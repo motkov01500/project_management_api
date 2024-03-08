@@ -7,11 +7,11 @@ import lombok.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "userr", schema = "public")
+@Table(name = "userr")
 @Getter
 @Setter
 @NoArgsConstructor
-public class User implements Serializable {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "userr_id_generator")

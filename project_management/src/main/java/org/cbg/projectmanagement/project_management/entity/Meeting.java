@@ -10,11 +10,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "meeting", schema = "public")
+@Table(name = "meeting")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Meeting implements Serializable {
+public class Meeting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meeting_generator")

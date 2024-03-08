@@ -1,18 +1,12 @@
 package org.cbg.projectmanagement.project_management.controller;
 
-import com.sun.net.httpserver.HttpContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.cbg.projectmanagement.project_management.auth.AuthService;
-import org.cbg.projectmanagement.project_management.auth.UserContext;
-import org.cbg.projectmanagement.project_management.auth.UserDetails;
-import org.cbg.projectmanagement.project_management.entity.User;
-import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.dto.TokenResponseDTO;
 import org.cbg.projectmanagement.project_management.request.AuthRequest;
-import org.cbg.projectmanagement.project_management.request.UserRequest;
-import org.cbg.projectmanagement.project_management.service.UserService;
+import org.cbg.projectmanagement.project_management.service.AuthService;
 
 @Path("/auth")
 public class AuthController {
@@ -20,17 +14,32 @@ public class AuthController {
     @Inject
     AuthService authService;
 
-    @Inject
-    UserService userService;
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get-current")
+    public Response getCurrentLoginUser() {
+        return Response
+                .status(Response.Status.OK)
+                .entity(authService.getCurrentUserRole())
+                .build();
+    }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response login(AuthRequest authRequest) throws NotFoundResourceException {
-        User loginUser = authService.isValidCredentials(authRequest);
-        UserDetails userDetails = new UserDetails(loginUser.getUsername(),
-                loginUser.getRole().getName());
+    @Path("/login")
+    public Response login(AuthRequest authRequest) {
+        String token = authService.validateCredentials(authRequest);
+        if(token.equals("NOT_VALID_CREDENTIALS")) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("NOT VALID CREDENTIALS")
+                    .build();
+        }
 
-        return Response.status(Response.Status.OK).entity(userDetails).build();
+        return Response
+                .status(Response.Status.OK)
+                .entity(new TokenResponseDTO(token))
+                .build();
     }
 }
