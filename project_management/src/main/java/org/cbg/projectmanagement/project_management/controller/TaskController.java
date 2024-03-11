@@ -1,5 +1,7 @@
 package org.cbg.projectmanagement.project_management.controller;
 
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -26,6 +28,7 @@ public class TaskController {
     @GET
     @Path("/get-all")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response getAll() {
         List<TaskDTO> taskList = taskService.findAll()
                 .stream()
@@ -42,6 +45,7 @@ public class TaskController {
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response create(TaskRequest request) {
         Task newTask = taskService.create(request);
 
@@ -55,6 +59,7 @@ public class TaskController {
     @Path("/update-progress/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @PermitAll
     public Response update(@PathParam("id") Long id, TaskUpdateRequest request) {
         Task updatedTask = taskService.updateProgress(id, request);
         return Response
@@ -65,6 +70,7 @@ public class TaskController {
 
     @DELETE
     @Path("/delete/{id}")
+    @RolesAllowed("administrator")
     public Response delete(@PathParam("id") Long id) {
         taskService.delete(id);
         return Response

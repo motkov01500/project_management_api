@@ -1,5 +1,6 @@
 package org.cbg.projectmanagement.project_management.controller;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.*;
@@ -26,6 +27,7 @@ public class MeetingController {
     @GET
     @Path("get-all")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response getAll() {
         return Response
                 .status(Response.Status.OK)
@@ -37,6 +39,7 @@ public class MeetingController {
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response create(MeetingRequest request) {
         Meeting newMeeting = meetingService.create(request);
         return Response
@@ -49,6 +52,7 @@ public class MeetingController {
     @Path("/update-status/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response updateStatus(@PathParam("id") Long id, MeetingStatusChangeRequest request) {
         Meeting updatedMeeting = meetingService.updateStatus(id, request);
         return Response
@@ -61,6 +65,7 @@ public class MeetingController {
     @Path("/update-date/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response updateDate(@PathParam("id") Long id, MeetingDateUpdateRequest request) {
         Meeting updatedMeeting = meetingService.updateDate(id, request);
         return Response
@@ -71,6 +76,7 @@ public class MeetingController {
 
     @DELETE
     @Path("/delete/{id}")
+    @RolesAllowed("administrator")
     public Response delete(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.NO_CONTENT)

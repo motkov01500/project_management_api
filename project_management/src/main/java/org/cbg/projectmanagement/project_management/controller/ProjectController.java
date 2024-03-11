@@ -1,5 +1,6 @@
 package org.cbg.projectmanagement.project_management.controller;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +23,7 @@ public class ProjectController {
     @GET
     @Path("/get-all")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response getAll() {
         return Response
                 .status(Response.Status.OK)
@@ -32,6 +34,7 @@ public class ProjectController {
     @GET
     @Path("/get/{id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response getById(@PathParam("id") Long id) {
         ProjectDTO projectDTO = projectMapper.mapProjectToProjectDTO(projectService.findById(id));
         return Response
@@ -44,6 +47,7 @@ public class ProjectController {
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response create(ProjectRequest request) {
         ProjectDTO createdProject = projectService.create(request);
         return Response
@@ -56,6 +60,7 @@ public class ProjectController {
     @Path("update/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
     public Response update(@PathParam("id")Long id, ProjectRequest request) {
         ProjectDTO updatedProject = projectService.update(id, request);
         return Response
@@ -66,6 +71,7 @@ public class ProjectController {
 
     @DELETE
     @Path("/delete/{id}")
+    @RolesAllowed("administrator")
     public Response delete(@PathParam("id")Long id) {
         projectService.delete(id);
         return Response
