@@ -25,6 +25,7 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
     public AuthenticationStatus validateRequest(HttpServletRequest request, HttpServletResponse response, HttpMessageContext context) {
         String name = request.getParameter("username");
         String password = request.getParameter("password");
+
         String token = extractToken(context);
 
         if (name != null && password != null) {

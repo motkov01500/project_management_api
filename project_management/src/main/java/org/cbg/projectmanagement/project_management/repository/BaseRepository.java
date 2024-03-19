@@ -67,6 +67,7 @@ public abstract class BaseRepository<T> {
         return entityManager.createQuery("from " + getEntityName()).getResultList();
     }
 
+    //TODO:JsonObject for response
     public T findById(Long id) {
         String query = "from " + getEntityName();
         List<T> result = entityManager.createQuery(query + " where id = :id")

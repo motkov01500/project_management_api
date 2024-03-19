@@ -1,18 +1,16 @@
-package org.cbg.projectmanagement.project_management.request;
+package org.cbg.projectmanagement.project_management.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthRequest implements Serializable {
+public class UserUpdateDTO {
 
-    private String username;
     private String password;
+    private String fullName;
 }

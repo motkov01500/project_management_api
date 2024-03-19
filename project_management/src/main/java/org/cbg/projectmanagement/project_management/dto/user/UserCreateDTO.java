@@ -1,5 +1,6 @@
-package org.cbg.projectmanagement.project_management.request;
+package org.cbg.projectmanagement.project_management.dto.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,7 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserRequest {
+@AllArgsConstructor
+public class UserCreateDTO {
 
     private String username;
     private String password;

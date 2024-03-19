@@ -1,15 +1,13 @@
-package org.cbg.projectmanagement.project_management.request;
+package org.cbg.projectmanagement.project_management.dto.meeting;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor
-public class MeetingRequest {
+public class MeetingCreateDTO {
 
     private LocalDateTime date;
     private Long projectId;

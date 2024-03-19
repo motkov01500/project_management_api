@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "userr")
@@ -22,7 +23,7 @@ public class User {
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @Column(name = "passwor", nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "full_name")
@@ -31,6 +32,9 @@ public class User {
     @ManyToOne(targetEntity = Role.class)
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @ManyToMany(mappedBy = "users")
+    private Set<Project> projects;
 
     public User(String username, String password, String fullName, Role role) {
         this.username = username;

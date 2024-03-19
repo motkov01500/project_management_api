@@ -2,12 +2,10 @@ package org.cbg.projectmanagement.project_management.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
 import java.util.Set;
 
 @Entity
@@ -31,8 +29,8 @@ public class Project {
 
     @ManyToMany
     @JoinTable(name = "user_project",
-            joinColumns = {@JoinColumn(name = "userr_id")},
-            inverseJoinColumns = {@JoinColumn(name = "project_id")})
+            joinColumns = {@JoinColumn(name = "project_id")},
+            inverseJoinColumns = {@JoinColumn(name = "userr_id")})
     private Set<User> users;
 
     public Project(String key, String title) {

@@ -6,13 +6,14 @@ import jakarta.inject.Named;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.cbg.projectmanagement.project_management.dto.MeetingDTO;
-import org.cbg.projectmanagement.project_management.entity.Meeting;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingResponseDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
-import org.cbg.projectmanagement.project_management.request.MeetingDateUpdateRequest;
-import org.cbg.projectmanagement.project_management.request.MeetingRequest;
-import org.cbg.projectmanagement.project_management.request.MeetingStatusChangeRequest;
 import org.cbg.projectmanagement.project_management.service.MeetingService;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Named("MeetingController")
 @Path("/meeting")
@@ -29,9 +30,13 @@ public class MeetingController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getAll() {
+        List<MeetingResponseDTO> meetingList = meetingService.findAll()
+                .stream()
+                .map(meetingMapper::mapMeetingToMeetingDTO)
+                .collect(Collectors.toList());
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findAll())
+                .entity(meetingList)
                 .build();
     }
 
@@ -40,37 +45,26 @@ public class MeetingController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response create(MeetingRequest request) {
-        Meeting newMeeting = meetingService.create(request);
+    public Response create(MeetingCreateDTO meetingCreateDTO) {
+        MeetingResponseDTO newMeeting = meetingMapper.mapMeetingToMeetingDTO(
+                meetingService.create(meetingCreateDTO));
         return Response
                 .status(Response.Status.CREATED)
-                .entity(meetingMapper.mapMeetingToMeetingDTO(newMeeting))
+                .entity(newMeeting)
                 .build();
     }
 
     @POST
-    @Path("/update-status/{id}")
+    @Path("/update/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response updateStatus(@PathParam("id") Long id, MeetingStatusChangeRequest request) {
-        Meeting updatedMeeting = meetingService.updateStatus(id, request);
+    public Response updateDate(@PathParam("id")Long id, MeetingUpdateDTO meetingUpdateDTO) {
+        MeetingResponseDTO updatedMeeting = meetingMapper
+                .mapMeetingToMeetingDTO(meetingService.update(id, meetingUpdateDTO));
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingMapper.mapMeetingToMeetingDTO(updatedMeeting))
-                .build();
-    }
-
-    @POST
-    @Path("/update-date/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("administrator")
-    public Response updateDate(@PathParam("id") Long id, MeetingDateUpdateRequest request) {
-        Meeting updatedMeeting = meetingService.updateDate(id, request);
-        return Response
-                .status(Response.Status.OK)
-                .entity(meetingMapper.mapMeetingToMeetingDTO(updatedMeeting))
+                .entity(updatedMeeting)
                 .build();
     }
 
@@ -78,6 +72,7 @@ public class MeetingController {
     @Path("/delete/{id}")
     @RolesAllowed("administrator")
     public Response delete(@PathParam("id") Long id) {
+        meetingService.delete(id);
         return Response
                 .status(Response.Status.NO_CONTENT)
                 .build();

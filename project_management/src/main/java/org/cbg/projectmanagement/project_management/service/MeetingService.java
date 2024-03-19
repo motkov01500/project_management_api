@@ -3,18 +3,14 @@ package org.cbg.projectmanagement.project_management.service;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
-import org.cbg.projectmanagement.project_management.dto.MeetingDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Meeting;
 import org.cbg.projectmanagement.project_management.entity.Project;
-import org.cbg.projectmanagement.project_management.enumeration.MeetingStatus;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.repository.MeetingRepository;
-import org.cbg.projectmanagement.project_management.request.MeetingDateUpdateRequest;
-import org.cbg.projectmanagement.project_management.request.MeetingRequest;
-import org.cbg.projectmanagement.project_management.request.MeetingStatusChangeRequest;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Named("MeetingService")
 public class MeetingService {
@@ -28,13 +24,10 @@ public class MeetingService {
     @Inject
     ProjectService projectService;
 
-    public List<MeetingDTO> findAll() {
-        return meetingRepository.findAll()
-                .stream()
-                .map(meetingMapper::mapMeetingToMeetingDTO)
-                .collect(Collectors.toList());
+    public List<Meeting> findAll() {
+        return meetingRepository
+                .findAll();
     }
-
 
     public Meeting findById(Long id) {
         return meetingRepository
@@ -42,28 +35,25 @@ public class MeetingService {
     }
 
     @Transactional
-    public  Meeting create(MeetingRequest request) {
-        Project project = projectService.findById(request.getProjectId());
-        Meeting newMeeting = new Meeting(request.getDate(), MeetingStatus.UPCOMING.getName(), project);
-        meetingRepository.create(newMeeting);
+    public  Meeting create(MeetingCreateDTO meetingCreateDTO) {
+        Project project = projectService.findById(meetingCreateDTO.getProjectId());
+        Meeting newMeeting = new Meeting(meetingCreateDTO.getDate(), "UPCOMING", project);
+        meetingRepository
+                .create(newMeeting);
         return newMeeting;
     }
 
-    public Meeting updateStatus(Long id, MeetingStatusChangeRequest request) {
+    public Meeting update(Long id, MeetingUpdateDTO meetingUpdateDTO) {
         Meeting updatedMeeting = findById(id);
-        updatedMeeting.setStatus(request.getStatus());
-        meetingRepository.update(updatedMeeting);
-        return updatedMeeting;
-    }
-
-    public Meeting updateDate(Long id, MeetingDateUpdateRequest request) {
-        Meeting updatedMeeting = findById(id);
-        updatedMeeting.setDate(request.getDate());
-        meetingRepository.update(updatedMeeting);
+        updatedMeeting.setDate(meetingUpdateDTO.getDate());
+        updatedMeeting.setStatus(meetingUpdateDTO.getStatus());
+        meetingRepository
+                .update(updatedMeeting);
         return updatedMeeting;
     }
 
     public void delete(Long id) {
-        meetingRepository.delete(id);
+        meetingRepository
+                .delete(id);
     }
 }

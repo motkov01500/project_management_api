@@ -3,16 +3,15 @@ package org.cbg.projectmanagement.project_management.service;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
-import org.cbg.projectmanagement.project_management.dto.ProjectDTO;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.project.ProjectCheckForUserDTO;
+import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Project;
-import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
-import org.cbg.projectmanagement.project_management.request.ProjectRequest;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Named("ProjectService")
 public class ProjectService {
@@ -20,15 +19,12 @@ public class ProjectService {
     @Inject
     ProjectRepository projectRepository;
 
-    @Inject
-    ProjectMapper projectMapper;
+    @Context
+    SecurityContext context;
 
-    public List<ProjectDTO> findAll() {
+    public List<Project> findAll() {
         return projectRepository
-                .findAll()
-                .stream()
-                .map(projectMapper::mapProjectToProjectDTO)
-                .collect(Collectors.toList());
+                .findAll();
     }
 
     public Project findById(Long id) {
@@ -36,26 +32,31 @@ public class ProjectService {
                 .findById(id);
     }
 
-    @Transactional
-    public ProjectDTO create(ProjectRequest request) {
-        Project project = new Project(request.getKey(), request.getTitle());
-        projectRepository.create(project);
-        return projectMapper.mapProjectToProjectDTO(project);
+    public boolean isUserInProject(String key) {
+        boolean tst = projectRepository
+                .findUserInProject(key, context.getUserPrincipal().getName());
+        return tst;
     }
 
     @Transactional
-    public ProjectDTO update(Long id, ProjectRequest request) {
+    public Project create(ProjectCreateDTO projectCreateDTO) {
+        Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle());
+        projectRepository.create(project);
+        return project;
+    }
+
+    @Transactional
+    public Project update(Long id, ProjectUpdateDTO projectUpdateDTO) {
         Project project = findById(id);
-        if (!request.getKey().isBlank()) {
-            project.setKey(request.getKey());
+        if (!projectUpdateDTO.getKey().isEmpty()) {
+            project.setKey(projectUpdateDTO.getKey());
         }
 
-        if (!request.getTitle().isBlank()) {
-            project.setTitle(request.getTitle());
+        if (!projectUpdateDTO.getTitle().isEmpty()) {
+            project.setTitle(projectUpdateDTO.getTitle());
         }
 
-        return projectMapper
-                .mapProjectToProjectDTO(project);
+        return project;
     }
 
     public void delete(Long id) {

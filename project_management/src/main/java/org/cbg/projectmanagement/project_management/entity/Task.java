@@ -1,13 +1,10 @@
 package org.cbg.projectmanagement.project_management.entity;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.cbg.projectmanagement.project_management.enumeration.TaskStatusEnum;
 
 import jakarta.persistence.*;
-import java.io.Serializable;
 
 
 @Entity

@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.cbg.projectmanagement.project_management.enumeration.MeetingStatus;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity

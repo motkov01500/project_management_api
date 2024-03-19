@@ -1,10 +1,8 @@
 package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.inject.Named;
-import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
-import org.cbg.projectmanagement.project_management.request.AuthRequest;
 
 import java.util.HashMap;
 import java.util.List;

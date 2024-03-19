@@ -1,13 +1,11 @@
-package org.cbg.projectmanagement.project_management.request;
+package org.cbg.projectmanagement.project_management.dto.task;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
-public class TaskRequest {
+public class TaskCreateDTO {
 
     private int progress;
     private String status;
