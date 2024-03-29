@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.auth.AuthLoginDTO;
 import org.cbg.projectmanagement.project_management.dto.auth.AuthResponseDTO;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.mapper.AuthMapper;
@@ -36,12 +37,14 @@ public class AuthController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @PermitAll
-    public Response login() {
+    public Response login(AuthLoginDTO authLoginDTO) {
         if(context.getUserPrincipal().getName() != null) {
-            Optional<User> currentLoggedUser = userService
-                    .getUserByUsername(context.getUserPrincipal().getName());
-            AuthResponseDTO user = authMapper.mapUserToAuthResponseDTO(currentLoggedUser.get());
-            return Response.ok(user).build();
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(authMapper
+                            .mapUserToAuthResponseDTO(userService
+                                    .getUserByUsername(context.getUserPrincipal().getName())))
+                    .build();
         }
         return Response
                 .status(Response.Status.UNAUTHORIZED)

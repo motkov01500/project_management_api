@@ -1,6 +1,8 @@
 package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.inject.Named;
+import jakarta.json.Json;
+import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 
@@ -17,11 +19,18 @@ public class UserRepository extends  BaseRepository<User> {
         return User.class.getSimpleName();
     }
 
-    public Optional<User> getUserByUsername(String username) throws NotFoundResourceException {
+    public Optional<User> getUserByUsername(String username) {
         String query = "from User WHERE username = :username";
         Map<String, Object> criteria  = new HashMap<>();
         criteria.put("username", username);
         List<User> userList = getEntityByCriteria(query,criteria);
-        return Optional.ofNullable(userList.get(0));
+        return Optional.of(userList.get(0));
+    }
+
+    public List<User> getUnassignedUsers(String key) {
+        String query = "FROM User U WHERE U.id NOT IN ( FROM Project PR JOIN PR.users US WHERE PR.key = :key)";
+        Map<String, Object> criteria  = new HashMap<>();
+        criteria.put("key", key);
+        return getEntityByCriteria(query,criteria);
     }
 }

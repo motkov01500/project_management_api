@@ -40,60 +40,59 @@ public class ProjectController {
     }
 
     @GET
-    @Path("/get/{id}")
+    @Path("/administrator/get/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getById(@PathParam("id") Long id) {
-        ProjectResponseDTO projectDTO = projectMapper
-                .mapProjectToProjectDTO(projectService.findById(id));
         return Response
                 .status(Response.Status.OK)
-                .entity(projectDTO)
+                .entity(projectMapper
+                        .mapProjectToProjectDTO(projectService.findById(id)))
                 .build();
     }
 
     @GET
-    @Path("/get-by-key/{key}")
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @PermitAll
-    public Response getByKey(@PathParam("key")String key) {
+    @Path("/administrator/get-unassigned")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response getUnassignedProjects() {
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.isUserInProject(key))
+                .entity(projectService.findUnassignedProjects()
+                        .stream()
+                        .map(projectMapper::mapProjectToProjectDTO)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
     @POST
-    @Path("/create")
+    @Path("/administrator/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response create(ProjectCreateDTO projectCreateDTO) {
-        ProjectResponseDTO createdProject = projectMapper
-                .mapProjectToProjectDTO(projectService.create(projectCreateDTO));
         return Response
                 .status(Response.Status.CREATED)
-                .entity(createdProject)
+                .entity(projectMapper
+                        .mapProjectToProjectDTO(projectService.create(projectCreateDTO)))
                 .build();
     }
 
     @PUT
-    @Path("update/{id}")
+    @Path("/administrator/update/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response update(@PathParam("id") Long id, ProjectUpdateDTO projectUpdateDTO) {
-        ProjectResponseDTO updatedProject = projectMapper
-                .mapProjectToProjectDTO(projectService.update(id, projectUpdateDTO));
         return Response
                 .status(Response.Status.OK)
-                .entity(updatedProject)
+                .entity(projectMapper
+                        .mapProjectToProjectDTO(projectService.update(id, projectUpdateDTO)))
                 .build();
     }
 
     @DELETE
-    @Path("/delete/{id}")
+    @Path("/administrator/delete/{id}")
     @RolesAllowed("administrator")
     public Response delete(@PathParam("id") Long id) {
         projectService.delete(id);

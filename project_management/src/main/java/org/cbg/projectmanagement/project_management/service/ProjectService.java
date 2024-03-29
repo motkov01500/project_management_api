@@ -32,10 +32,14 @@ public class ProjectService {
                 .findById(id);
     }
 
+    public List<Project> findUnassignedProjects() {
+        return  projectRepository
+                .findUnassignedProjects();
+    }
+
     public boolean isUserInProject(String key) {
-        boolean tst = projectRepository
+        return projectRepository
                 .findUserInProject(key, context.getUserPrincipal().getName());
-        return tst;
     }
 
     @Transactional

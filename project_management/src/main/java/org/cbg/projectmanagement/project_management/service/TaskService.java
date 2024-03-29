@@ -26,12 +26,6 @@ public class TaskService {
     @Inject
     MeetingService meetingService;
 
-    @Inject
-    UserService userService;
-
-    @Context
-    SecurityContext context;
-
     public List<Task> findAll() {
         return taskRepository
                 .findAll();
@@ -40,10 +34,6 @@ public class TaskService {
     public Task findById(Long id) {
         return taskRepository
                 .findById(id);
-    }
-
-    public String userName() {
-        return context.getUserPrincipal().getName();
     }
 
     @Transactional
@@ -56,20 +46,19 @@ public class TaskService {
         return newTask;
     }
 
-    //TODO:Make for user and administrator
+    public Task updateProgressForUser(Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
+        Task currentTask = null;
+        if (projectService.isUserInProject(taskUpdateProgressDTO.getProjectKey())) {
+            currentTask = updateProgress(id, taskUpdateProgressDTO);
+        }
+        return currentTask == null ? findById(id) : currentTask;
+    }
+
     public Task updateProgress(Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
-        String currentLoggedUserUsername = context.getUserPrincipal().getName();
-        Task task = findById(id);
-//        if(context.isUserInRole("user")) {
-//            if (!projectService.isUserInProject(currentLoggedUserUsername) &&
-//                    !task.getMeeting().getStatus().equalsIgnoreCase("done")) {
-//                task.setProgress(taskUpdateProgressDTO.getProgress());
-//            }
-//        } else {
-//            task.setProgress(taskUpdateProgressDTO.getProgress());
-//        }
-        taskRepository.update(task);
-        return task;
+        Task currentTask = findById(id);
+        currentTask.setProgress(taskUpdateProgressDTO.getProgress());
+        taskRepository.update(currentTask);
+        return currentTask;
     }
 
     public void delete(Long id) {

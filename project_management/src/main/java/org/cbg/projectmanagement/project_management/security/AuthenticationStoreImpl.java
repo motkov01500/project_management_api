@@ -24,12 +24,11 @@ public class AuthenticationStoreImpl implements IdentityStore {
     public CredentialValidationResult validate(Credential credential) {
         CredentialValidationResult result;
         UsernamePasswordCredential usernamePassword = (UsernamePasswordCredential) credential;
-        Optional<User> expectedUser = userService.getUserByUsername(usernamePassword.getCaller());
-        if(expectedUser.isPresent() &&
-                userService.checkPassword(usernamePassword.getPasswordAsString(), expectedUser.get().getPassword())) {
+        User expectedUser = userService
+                .getUserByUsername(usernamePassword.getCaller());
+        if (userService.checkPassword(usernamePassword.getPasswordAsString(), expectedUser.getPassword())) {
             result = new CredentialValidationResult(usernamePassword.getCaller());
-        }
-        else {
+        } else {
             result = CredentialValidationResult.INVALID_RESULT;
         }
 

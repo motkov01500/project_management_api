@@ -22,8 +22,8 @@ public class AuthorizationIdentityStore implements IdentityStore {
     @Override
     public Set<String> getCallerGroups(CredentialValidationResult validationResult) {
         Set<String> result = new HashSet<>();
-        Optional<User> currentUser = userService.getUserByUsername(validationResult.getCallerPrincipal().getName());
-        currentUser.ifPresent(user -> result.add(user.getRole().getName()));
+        User currentUser = userService.getUserByUsername(validationResult.getCallerPrincipal().getName());
+        result.add(currentUser.getRole().getName());
         return result;
     }
 

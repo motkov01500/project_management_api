@@ -27,30 +27,41 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/getAll")
+    @Path("/administrator/get-all")
     @RolesAllowed("administrator")
-    public Response getAllUsers() {
-        List<AuthResponseDTO> userList = userService.findAllUsers()
-                .stream()
-                .map(authMapper::mapUserToAuthResponseDTO)
-                .collect(Collectors.toList());
+    public Response getAll() {
         return Response
                 .status(Response.Status.OK)
-                .entity(userList)
+                .entity(userService.findAllUsers()
+                        .stream()
+                        .map(authMapper::mapUserToAuthResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/get-all-unassigned/{key}")
+    @RolesAllowed("administrator")
+    public Response getUnassignedUsers(@PathParam("key")String key) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.getUnassignedUsers(key)
+                        .stream()
+                        .map(authMapper::mapUserToAuthResponseDTO)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/create")
+    @Path("/administrator/create")
     @RolesAllowed("administrator")
-    public Response createUser(UserCreateDTO userCreateDTO) {
-        User user = userService.createUser(userCreateDTO);
-        AuthResponseDTO mappedUser = authMapper
-                .mapUserToAuthResponseDTO(user);
+    public Response create(UserCreateDTO userCreateDTO) {
         return Response
                 .status(Response.Status.ACCEPTED)
-                .entity(mappedUser)
+                .entity(authMapper
+                        .mapUserToAuthResponseDTO(userService.createUser(userCreateDTO)))
                 .build();
     }
 
@@ -59,21 +70,18 @@ public class UserController {
     @Produces(MediaType.TEXT_PLAIN)
     @Path("/update/{id}")
     @PermitAll
-    public Response updatePassword(@PathParam("id") Long id, UserUpdateDTO userUpdateDTO) {
-        User user = userService
-                .updateUser(userUpdateDTO, id);
-        AuthResponseDTO mappedUser = authMapper
-                .mapUserToAuthResponseDTO(user);
+    public Response update(@PathParam("id") Long id, UserUpdateDTO userUpdateDTO) {
         return Response
                 .status(Response.Status.OK)
-                .entity(mappedUser)
+                .entity(authMapper
+                        .mapUserToAuthResponseDTO(userService.updateUser(id, userUpdateDTO)))
                 .build();
     }
 
     @DELETE
     @Path("/delete/{id}")
     @RolesAllowed("administrator")
-    public Response deleteUserById(@PathParam("id") Long id) {
+    public Response deleteById(@PathParam("id") Long id) {
         userService.deleteUserById(id);
         return Response
                 .status(Response.Status.NO_CONTENT)

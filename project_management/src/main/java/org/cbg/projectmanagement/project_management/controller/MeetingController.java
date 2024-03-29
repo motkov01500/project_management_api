@@ -1,5 +1,6 @@
 package org.cbg.projectmanagement.project_management.controller;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -26,50 +27,62 @@ public class MeetingController {
     MeetingMapper meetingMapper;
 
     @GET
-    @Path("get-all")
+    @Path("/administrator/get-all")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getAll() {
-        List<MeetingResponseDTO> meetingList = meetingService.findAll()
-                .stream()
-                .map(meetingMapper::mapMeetingToMeetingDTO)
-                .collect(Collectors.toList());
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingList)
+                .entity(meetingService.findAll()
+                        .stream()
+                        .map(meetingMapper::mapMeetingToMeetingDTO)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
+    @GET
+    @Path("/get-unfinished/{key}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PermitAll
+    public Response getUnfinishedMeetings(@PathParam("key")String key) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.getUnfinishedMeetings(key)
+                        .stream()
+                        .map(meetingMapper::mapMeetingToMeetingDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+
     @POST
-    @Path("/create")
+    @Path("/administrator/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response create(MeetingCreateDTO meetingCreateDTO) {
-        MeetingResponseDTO newMeeting = meetingMapper.mapMeetingToMeetingDTO(
-                meetingService.create(meetingCreateDTO));
         return Response
                 .status(Response.Status.CREATED)
-                .entity(newMeeting)
+                .entity(meetingMapper
+                        .mapMeetingToMeetingDTO(meetingService.create(meetingCreateDTO)))
                 .build();
     }
 
     @POST
-    @Path("/update/{id}")
+    @Path("/administrator/update/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response updateDate(@PathParam("id")Long id, MeetingUpdateDTO meetingUpdateDTO) {
-        MeetingResponseDTO updatedMeeting = meetingMapper
-                .mapMeetingToMeetingDTO(meetingService.update(id, meetingUpdateDTO));
         return Response
                 .status(Response.Status.OK)
-                .entity(updatedMeeting)
+                .entity(meetingMapper
+                        .mapMeetingToMeetingDTO(meetingService.update(id, meetingUpdateDTO)))
                 .build();
     }
 
     @DELETE
-    @Path("/delete/{id}")
+    @Path("/administrator/delete/{id}")
     @RolesAllowed("administrator")
     public Response delete(@PathParam("id") Long id) {
         meetingService.delete(id);

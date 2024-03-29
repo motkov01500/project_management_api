@@ -56,4 +56,9 @@ public class MeetingService {
         meetingRepository
                 .delete(id);
     }
+
+    public List<Meeting> getUnfinishedMeetings(String key) {
+        return meetingRepository
+                .getUnfinishedMeetings(key);
+    }
 }

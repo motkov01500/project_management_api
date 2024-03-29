@@ -2,6 +2,8 @@ package org.cbg.projectmanagement.project_management.service;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.json.Json;
+import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.user.UserCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Role;
@@ -26,18 +28,28 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public Optional<User> getUserByUsername(String username) throws NotFoundResourceException {
+    public User getUserByUsername(String username) throws NotFoundResourceException {
         return userRepository
-                .getUserByUsername(username);
+                .getUserByUsername(username)
+                .orElseThrow(()-> new NotFoundResourceException("User is not found", Response
+                        .status(Response.Status.NOT_FOUND)
+                        .entity(Json.createObjectBuilder()
+                                .add("message","User is not found!")
+                                .build())
+                        .build()));
     }
 
     public User findUserById(Long id) {
         return userRepository.findById(id);
     }
 
+    public List<User> getUnassignedUsers(String key) {
+        return userRepository
+                .getUnassignedUsers(key);
+    }
+
     public User createUser(UserCreateDTO userCreateDTO) {
-        //TODO:find role by name(better)
-        Role role = roleService.findById(new Long(2));
+        Role role = roleService.findRoleByName("user");
         String hashedPassword = hashPassword(userCreateDTO.getPassword());
         User user = new User(userCreateDTO.getUsername(), hashedPassword,
                 userCreateDTO.getFullName(), role);
@@ -45,7 +57,7 @@ public class UserService {
         return user;
     }
 
-    public User updateUser(UserUpdateDTO userUpdateDTO, Long id) {
+    public User updateUser(Long id,UserUpdateDTO userUpdateDTO) {
         User user = findUserById(id);
         if(!userUpdateDTO.getPassword().isEmpty()) {
             String hashedPassword = hashPassword(userUpdateDTO.getPassword());

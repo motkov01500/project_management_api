@@ -1,5 +1,8 @@
 package org.cbg.projectmanagement.project_management.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -11,6 +14,9 @@ import jakarta.security.enterprise.identitystore.CredentialValidationResult;
 import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 
 @RequestScoped
 public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
@@ -25,11 +31,10 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
     public AuthenticationStatus validateRequest(HttpServletRequest request, HttpServletResponse response, HttpMessageContext context) {
         String name = request.getParameter("username");
         String password = request.getParameter("password");
-
         String token = extractToken(context);
-
         if (name != null && password != null) {
-            CredentialValidationResult result = identityStoreHandler.validate(new UsernamePasswordCredential(name, password));
+            CredentialValidationResult result = identityStoreHandler
+                    .validate(new UsernamePasswordCredential(name, password));
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return createToken(result, context);
             }

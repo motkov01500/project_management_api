@@ -1,5 +1,7 @@
 package org.cbg.projectmanagement.project_management.repository;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import jakarta.persistence.*;
 import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
@@ -67,14 +69,17 @@ public abstract class BaseRepository<T> {
         return entityManager.createQuery("from " + getEntityName()).getResultList();
     }
 
-    //TODO:JsonObject for response
     public T findById(Long id) {
         String query = "from " + getEntityName();
         List<T> result = entityManager.createQuery(query + " where id = :id")
                 .setParameter("id", id)
                 .getResultList();
         if (result.isEmpty()) {
-             throw new NotFoundResourceException("Resource is not found", Response.status(Response.Status.NOT_FOUND).entity("Not found").build());
+             throw new NotFoundResourceException("Resource is not found",
+                     Response.status(Response.Status.NOT_FOUND).entity(Json.createObjectBuilder()
+                             .add("message",getEntityName() + " is not found")
+                             .build())
+                             .build());
         }
         return result.get(0);
     }
