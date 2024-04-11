@@ -1,4 +1,4 @@
-package org.cbg.projectmanagement.project_management.dto.auth;
+package org.cbg.projectmanagement.project_management.dto.user;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,8 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class AuthLoginDTO {
+public class UserPasswordUpdateDTO {
 
-    private String username;
     private String password;
 }

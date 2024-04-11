@@ -1,5 +1,6 @@
 package org.cbg.projectmanagement.project_management.dto.meeting;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,8 +11,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class MeetingResponseDTO {
 
+    private Long id;
     private LocalDateTime date;
     private String status;
     private ProjectResponseDTO project;

@@ -1,9 +1,7 @@
 package org.cbg.projectmanagement.project_management.controller;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -13,30 +11,26 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.auth.AuthLoginDTO;
-import org.cbg.projectmanagement.project_management.dto.auth.AuthResponseDTO;
-import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.dto.auth.RegisterDTO;
 import org.cbg.projectmanagement.project_management.mapper.AuthMapper;
 import org.cbg.projectmanagement.project_management.service.UserService;
 
-import java.util.Optional;
-
-@Path("/auth")
+@Path("/v1/auth")
 public class AuthController {
 
     @Context
-    SecurityContext context;
+    private SecurityContext context;
 
     @Inject
-    AuthMapper authMapper;
+    private AuthMapper authMapper;
 
     @Inject
-    UserService userService;
+    private UserService userService;
 
     @POST
     @Path("login")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @PermitAll
     public Response login(AuthLoginDTO authLoginDTO) {
         if(context.getUserPrincipal().getName() != null) {
             return Response
@@ -48,6 +42,22 @@ public class AuthController {
         }
         return Response
                 .status(Response.Status.UNAUTHORIZED)
+                .entity(Json.createObjectBuilder()
+                        .add("message","Invalid Username or Password")
+                        .build())
+                .build();
+    }
+
+    @POST
+    @Path("register")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response register(RegisterDTO registerDTO) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(authMapper
+                        .mapUserToAuthResponseDTO(userService
+                                .register(registerDTO)))
                 .build();
     }
 }

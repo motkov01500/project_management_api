@@ -6,7 +6,7 @@ import jakarta.ws.rs.ext.Provider;
 
 public class NotFoundResourceException extends WebApplicationException {
 
-    public NotFoundResourceException(String message, Response response) {
-        super(message, response);
+    public NotFoundResourceException(Response response) {
+        super(response);
     }
 }

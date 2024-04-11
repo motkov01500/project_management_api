@@ -4,14 +4,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @EqualsAndHashCode
-public class MeetingCreateDTO {
+public class MeetingAssignUserDTO {
 
-    private LocalDateTime date;
-    private String status;
-    private Long projectId;
+    private Long userId;
+    private Long meetingId;
 }

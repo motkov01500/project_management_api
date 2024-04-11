@@ -1,31 +1,51 @@
 package org.cbg.projectmanagement.project_management.repository;
 
-import jakarta.inject.Named;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.criteria.*;
+import jakarta.persistence.metamodel.EntityType;
 import org.cbg.projectmanagement.project_management.entity.Project;
+import org.cbg.projectmanagement.project_management.entity.Project_;
+import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.entity.User_;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Named("ProjectRepository")
-public class ProjectRepository extends BaseRepository<Project>{
+@Stateless
+public class ProjectRepository extends BaseRepository<Project> {
 
-    @Override
-    public String getEntityName() {
-        return Project.class.getSimpleName();
+    public ProjectRepository() {
+        super(Project.class);
     }
 
-    public boolean findUserInProject(String projectKey, String username) {
-        String query = "FROM Project PR JOIN PR.users US WHERE PR.key = :project_key AND US.username = :username";
-        Map<String, Object> criteria = new HashMap<>();
-        criteria.put("project_key", projectKey);
-        criteria.put("username", username);
-        List<Project> projectList = getEntityByCriteria(query, criteria);
-        return !projectList.isEmpty();
+    public List<Project> findProjectsRelatedToUser(String username) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<Project> query = getCriteriaQuery();
+        Root<Project> projectRoot = query.from(Project.class);
+        Join<Project, User> projectUserJoin = projectRoot.join(Project_.users);
+        query.select(projectRoot)
+                .where(criteriaBuilder.equal(projectUserJoin.get(User_.username),username));
+        return getEntityByCriteriaa(query).getResultList();
     }
 
     public List<Project> findUnassignedProjects() {
-        String query = "FROM Project P WHERE P.id NOT IN (FROM User U JOIN U.projects)";
-        return getEntityByCriteria(query, new HashMap<>());
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<Project> query = getCriteriaQuery();
+        Root<Project> projectRoot = query.from(Project.class);
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<User> userRoot = subquery.from(User.class);
+        Join<User,Project> userProjectJoin = userRoot.join(User_.projects);
+        subquery.select(userProjectJoin.get(Project_.id));
+        query.select(projectRoot)
+                .where(criteriaBuilder.not(projectRoot.get(Project_.id).in(subquery)));
+        return getEntityByCriteriaa(query).getResultList();
+    }
+
+    public List<Project> findAll() {
+        CriteriaQuery<Project> query = getCriteriaQuery();
+        Root<Project> projectRoot = query.from(Project.class);
+        query.select(projectRoot);
+        return getEntityByCriteriaa(query).getResultList();
     }
 }

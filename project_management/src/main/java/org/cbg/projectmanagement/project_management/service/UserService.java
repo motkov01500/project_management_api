@@ -1,51 +1,85 @@
 package org.cbg.projectmanagement.project_management.service;
 
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.json.Json;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.auth.RegisterDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.user.UserPasswordUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateDTO;
+import org.cbg.projectmanagement.project_management.dto.user.UserUpdateImageDTO;
 import org.cbg.projectmanagement.project_management.entity.Role;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.exception.UsernameAlreadyExistsException;
+import org.cbg.projectmanagement.project_management.exception.ValidationException;
 import org.cbg.projectmanagement.project_management.repository.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-@Named("UserService")
+@Stateless
 public class UserService {
 
     @Inject
-    RoleService roleService;
+    private RoleService roleService;
 
     @Inject
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    @Context
+    private SecurityContext context;
+
+    public List<User> findAll() {
+        return userRepository
+                .findAll();
+    }
+
+    public List<User> getUsersRelatedToProject(String key) {
+        return userRepository
+                .getUsersRelatedToProject(key);
+    }
+
+    public User getCurrentUser() {
+        return getUserByUsername(context.getUserPrincipal().getName());
+    }
+
+    public List<User> getUsersRelatedToMeeting(Long meetingId) {
+        return userRepository
+                .getUsersRelatedToMeeting(meetingId);
     }
 
     public User getUserByUsername(String username) throws NotFoundResourceException {
         return userRepository
                 .getUserByUsername(username)
-                .orElseThrow(()-> new NotFoundResourceException("User is not found", Response
+                .orElseThrow(()-> new NotFoundResourceException(Response
                         .status(Response.Status.NOT_FOUND)
                         .entity(Json.createObjectBuilder()
-                                .add("message","User is not found!")
+                                .add("message","User was not found!")
                                 .build())
                         .build()));
     }
 
     public User findUserById(Long id) {
-        return userRepository.findById(id);
+        return userRepository
+                .findById(id)
+                .orElseThrow(()-> new NotFoundResourceException(Response
+                        .status(Response.Status.NOT_FOUND)
+                        .entity(Json.createObjectBuilder()
+                                .add("message","User was not found")
+                                .build())
+                        .build()));
     }
 
-    public List<User> getUnassignedUsers(String key) {
+    public List<User> getUnassignedUsers() {
         return userRepository
-                .getUnassignedUsers(key);
+                .getUnassignedUsers();
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -57,15 +91,72 @@ public class UserService {
         return user;
     }
 
-    public User updateUser(Long id,UserUpdateDTO userUpdateDTO) {
+    public User register(RegisterDTO registerDTO) {
+        User user = new User();
+        user.setUsername(registerDTO.getUsername());
+        Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}").matcher(registerDTO.getPassword());
+        if(!matcher.find()) {
+            throw new ValidationException("Wrong password", Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity(Json.createObjectBuilder()
+                            .add("message", "Password must contains minimum one uppercase, one lowercase and one digit and must be at least 8 characters")
+                            .build())
+                    .build());
+        }
+        user.setPassword(hashPassword(registerDTO.getPassword()));
+        user.setRole(roleService.findRoleByName("user"));
+        user.setFullName(registerDTO.getFullName());
+        userRepository.create(user);
+        return user;
+    }
+
+    public User uploadImageToCurrentUser(UserUpdateImageDTO userUpdateImageDTO) {
+        User currentUser = getUserByUsername(context.getUserPrincipal().getName());
+        currentUser.setImageUrl(userUpdateImageDTO.getImageUrl());
+        userRepository.update(currentUser);
+        return currentUser;
+    }
+
+    public User updatePassword(Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
         User user = findUserById(id);
-        if(!userUpdateDTO.getPassword().isEmpty()) {
+        user.setPassword(hashPassword(userPasswordUpdateDTO.getPassword()));
+        userRepository.update(user);
+        return user;
+    }
+
+    public User updateUser(Long id, UserUpdateDTO userUpdateDTO) {
+        User user = findUserById(id);
+
+        if(!userUpdateDTO.getUsername().isEmpty() &&
+                !(userUpdateDTO.getUsername().equals(user.getUsername()))) {
+            if(userRepository.getUserByUsername(userUpdateDTO.getUsername()).isEmpty()) {
+                user.setUsername(userUpdateDTO.getUsername());
+            } else {
+                throw new UsernameAlreadyExistsException("Username already exists", Response
+                        .status(Response.Status.BAD_REQUEST)
+                        .entity(Json.createObjectBuilder()
+                                .add("message","Username already exists")
+                                .build())
+                        .build());
+            }
+        }
+
+        if(!(userUpdateDTO.getPassword().isEmpty()) &&
+                !(userUpdateDTO.getPassword().equals(user.getPassword()))) {
             String hashedPassword = hashPassword(userUpdateDTO.getPassword());
             user.setPassword(hashedPassword);
         }
 
-        if(!userUpdateDTO.getFullName().isEmpty()) {
+        if(!(userUpdateDTO.getFullName().isEmpty()) &&
+                !(userUpdateDTO.getFullName().equals(user.getFullName()))) {
             user.setFullName(userUpdateDTO.getFullName());
+        }
+
+        if(!(userUpdateDTO.getRoleName().isEmpty()) &&
+                !(userUpdateDTO.getRoleName().equals(user.getRole().getName()))) {
+            user.setRole(
+                    roleService.findRoleByName(userUpdateDTO.getRoleName())
+            );
         }
 
         userRepository.update(user);

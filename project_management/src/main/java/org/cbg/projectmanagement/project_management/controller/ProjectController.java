@@ -1,32 +1,29 @@
 package org.cbg.projectmanagement.project_management.controller;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectCheckForUserDTO;
+import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectResponseDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.service.ProjectService;
 
 import java.util.stream.Collectors;
 
-@Path("/project")
+@Path("/v1/project")
 public class ProjectController {
 
     @Inject
-    ProjectService projectService;
+    private ProjectService projectService;
 
     @Inject
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @GET
-    @Path("/get-all")
+    @Path("/administrator/get-all")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getAll() {
@@ -40,7 +37,7 @@ public class ProjectController {
     }
 
     @GET
-    @Path("/administrator/get/{id}")
+    @Path("/administrator/get-by-id/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getById(@PathParam("id") Long id) {
@@ -52,13 +49,27 @@ public class ProjectController {
     }
 
     @GET
-    @Path("/administrator/get-unassigned")
+    @Path("/administrator/get-projects-without-users")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getUnassignedProjects() {
         return Response
                 .status(Response.Status.OK)
                 .entity(projectService.findUnassignedProjects()
+                        .stream()
+                        .map(projectMapper::mapProjectToProjectDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/get-projects-current-user")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("user")
+    public Response getCurrentLoggedUserProjects() {
+        return  Response
+                .status(Response.Status.OK)
+                .entity(projectService.findCurrentUserProjects()
                         .stream()
                         .map(projectMapper::mapProjectToProjectDTO)
                         .collect(Collectors.toList()))
@@ -88,6 +99,20 @@ public class ProjectController {
                 .status(Response.Status.OK)
                 .entity(projectMapper
                         .mapProjectToProjectDTO(projectService.update(id, projectUpdateDTO)))
+                .build();
+    }
+
+    @PATCH
+    @Path("/administrator/assign-user-to-project")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectService
+                        .assignUserToProject(projectAssignUserDTO.getUserId(),
+                                projectAssignUserDTO.getProjectId()))
                 .build();
     }
 

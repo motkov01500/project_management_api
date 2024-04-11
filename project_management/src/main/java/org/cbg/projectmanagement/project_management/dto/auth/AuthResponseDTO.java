@@ -1,16 +1,14 @@
 package org.cbg.projectmanagement.project_management.dto.auth;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.cbg.projectmanagement.project_management.dto.role.RoleResponseDTO;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 public class AuthResponseDTO {
 
     private String username;

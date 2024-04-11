@@ -7,8 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class ProjectCreateDTO {
+public class ProjectAssignUserDTO {
 
-    private String key;
-    private String title;
+    private Long userId;
+    private Long projectId;
 }

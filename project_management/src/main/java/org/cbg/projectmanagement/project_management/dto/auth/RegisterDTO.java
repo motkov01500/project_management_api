@@ -7,8 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class AuthLoginDTO {
+public class RegisterDTO {
 
     private String username;
     private String password;
+    private String fullName;
 }

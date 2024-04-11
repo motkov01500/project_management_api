@@ -1,10 +1,11 @@
 package org.cbg.projectmanagement.project_management.repository;
 
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import jakarta.persistence.*;
-import jakarta.ws.rs.core.Response;
-import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
 
 import java.util.List;
 import java.util.Map;
@@ -17,14 +18,18 @@ public abstract class BaseRepository<T> {
     @PersistenceContext
     private EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-    public abstract String getEntityName();
+    Class<T> entity;
+
+    public BaseRepository(Class<T> entity) {
+        this.entity = entity;
+    }
 
     public void create(T entity) {
         try {
-            EntityTransaction transaction = entityManager.getTransaction();
-            transaction.begin();
+            EntityTransaction tx = entityManager.getTransaction();
+            tx.begin();
             entityManager.persist(entity);
-            transaction.commit();
+            tx.commit();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -45,10 +50,10 @@ public abstract class BaseRepository<T> {
         try {
             EntityTransaction tx = entityManager.getTransaction();
             tx.begin();
-            String query = "delete from " + getEntityName();
-            entityManager.createQuery(query + " where id = :id")
-                    .setParameter("id", id)
-                    .executeUpdate();
+            T entityToRemove = entityManager.find(entity, id);
+            if(entityToRemove != null) {
+                entityManager.remove(entityToRemove);
+            }
             tx.commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,22 +70,20 @@ public abstract class BaseRepository<T> {
         return resultQuery.getResultList();
     }
 
-    public List<T> findAll() {
-        return entityManager.createQuery("from " + getEntityName()).getResultList();
+    public TypedQuery<T> getEntityByCriteriaa(CriteriaQuery<T> query) {
+        return entityManager.createQuery(query);
     }
 
-    public T findById(Long id) {
-        String query = "from " + getEntityName();
-        List<T> result = entityManager.createQuery(query + " where id = :id")
-                .setParameter("id", id)
-                .getResultList();
-        if (result.isEmpty()) {
-             throw new NotFoundResourceException("Resource is not found",
-                     Response.status(Response.Status.NOT_FOUND).entity(Json.createObjectBuilder()
-                             .add("message",getEntityName() + " is not found")
-                             .build())
-                             .build());
-        }
-        return result.get(0);
+    public Optional<T> findById(Long id) {
+        T entityToFind = entityManager.find(entity, id);
+        return Optional.ofNullable(entityToFind);
+    }
+
+    public CriteriaBuilder getCriteriaBuilder() {
+        return entityManager.getCriteriaBuilder();
+    }
+
+    public CriteriaQuery<T> getCriteriaQuery() {
+        return getCriteriaBuilder().createQuery(entity);
     }
 }

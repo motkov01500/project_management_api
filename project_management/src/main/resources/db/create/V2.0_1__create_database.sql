@@ -1,2 +1,2 @@
 DROP DATABASE IF EXISTS projectmanagement;
-CREATE DATABASE projectmanagement
+CREATE DATABASE projectmanagement;

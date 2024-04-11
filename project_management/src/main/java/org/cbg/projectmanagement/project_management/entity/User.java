@@ -8,10 +8,11 @@ import java.io.Serializable;
 import java.util.Set;
 
 @Entity
-@Table(name = "userr")
+@Table(name = "userr" ,schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class User {
 
     @Id
@@ -29,6 +30,9 @@ public class User {
     @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @ManyToOne(targetEntity = Role.class)
     @JoinColumn(name = "role_id")
     private Role role;
@@ -36,10 +40,17 @@ public class User {
     @ManyToMany(mappedBy = "users")
     private Set<Project> projects;
 
+    @ManyToMany(mappedBy = "users")
+    private Set<Meeting> meetings;
+
     public User(String username, String password, String fullName, Role role) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.role = role;
+    }
+
+    public void addProject(Project project) {
+        projects.add(project);
     }
 }

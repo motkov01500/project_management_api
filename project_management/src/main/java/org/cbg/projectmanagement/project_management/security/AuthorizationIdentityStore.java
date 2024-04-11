@@ -8,7 +8,6 @@ import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.service.UserService;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Collections.singleton;

@@ -2,6 +2,7 @@ package org.cbg.projectmanagement.project_management.entity;
 
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,10 +10,11 @@ import lombok.Setter;
 import java.util.Set;
 
 @Entity
-@Table(name = "project")
+@Table(name = "project", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class Project {
 
     @Id
@@ -36,5 +38,9 @@ public class Project {
     public Project(String key, String title) {
         this.key = key;
         this.title = title;
+    }
+
+    public void addUser(User user) {
+        users.add(user);
     }
 }

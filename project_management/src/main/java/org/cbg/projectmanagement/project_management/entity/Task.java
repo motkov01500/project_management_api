@@ -1,5 +1,6 @@
 package org.cbg.projectmanagement.project_management.entity;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,10 +9,11 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "task")
+@Table(name = "task", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class Task  {
 
     @Id
@@ -36,17 +38,12 @@ public class Task  {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToOne(targetEntity = Meeting.class)
-    @JoinColumn(name = "meeting_id")
-    private Meeting meeting;
-
     public Task(int progress, String status, int initialEstimation,
-                int hoursSpent, Project project, Meeting meeting) {
+                int hoursSpent, Project project) {
         this.progress = progress;
         this.status = status;
         this.initialEstimation = initialEstimation;
         this.hoursSpent = hoursSpent;
         this.project = project;
-        this.meeting = meeting;
     }
 }

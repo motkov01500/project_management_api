@@ -7,7 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class TaskUpdateProgressDTO {
+public class TaskUpdateDTO {
 
     private int progress;
+    private String status;
+    private int hoursSpent;
 }

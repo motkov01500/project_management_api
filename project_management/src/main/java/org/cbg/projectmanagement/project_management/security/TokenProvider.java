@@ -4,14 +4,16 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Named;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Named("TokenProvider")
+@Stateless
 public class TokenProvider {
 
     public String createToken(String username, Set<String> authorities) {
@@ -20,14 +22,14 @@ public class TokenProvider {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("auth", authorities.stream().collect(Collectors.joining("")))
-                .signWith(SignatureAlgorithm.HS512, ConstantProperties.SECRET_KEY)
-                .setExpiration(new Date(now + ConstantProperties.TOKEN_VALIDITY))
+                .signWith(SignatureAlgorithm.HS512, "my-secret")
+                .setExpiration(new Date(now + TimeUnit.MINUTES.toMillis(30)))
                 .compact();
     }
 
     public UserDetails getUserDetails(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(ConstantProperties.SECRET_KEY)
+                .setSigningKey("my-secret")
                 .parseClaimsJws(token)
                 .getBody();
 
@@ -38,7 +40,7 @@ public class TokenProvider {
 
     public boolean validateToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey(ConstantProperties.SECRET_KEY).parseClaimsJws(authToken);
+            Jwts.parser().setSigningKey("my-secret").parseClaimsJws(authToken);
             return true;
         } catch (SignatureException e) {
             return false;

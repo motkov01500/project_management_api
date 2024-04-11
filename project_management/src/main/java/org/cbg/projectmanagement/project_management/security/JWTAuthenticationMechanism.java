@@ -1,9 +1,7 @@
 package org.cbg.projectmanagement.project_management.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.security.enterprise.AuthenticationStatus;
@@ -15,10 +13,7 @@ import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-
-@RequestScoped
+@Stateless
 public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     @Inject
@@ -62,12 +57,12 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     private AuthenticationStatus createToken(CredentialValidationResult result, HttpMessageContext context) {
         String jwt = tokenProvider.createToken(result.getCallerPrincipal().getName(), result.getCallerGroups());
-        context.getResponse().setHeader(ConstantProperties.AUTHORIZATION_HEADER, "Bearer " + jwt);
+        context.getResponse().setHeader("Authorization", "Bearer " + jwt);
         return context.notifyContainerAboutLogin(result.getCallerPrincipal(), result.getCallerGroups());
     }
 
     private String extractToken(HttpMessageContext context) {
-        String authorizationHeader = context.getRequest().getHeader(ConstantProperties.AUTHORIZATION_HEADER);
+        String authorizationHeader = context.getRequest().getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring("Bearer".length(), authorizationHeader.length());
             return token;
