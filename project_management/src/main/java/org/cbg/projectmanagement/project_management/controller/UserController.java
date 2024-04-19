@@ -86,7 +86,7 @@ public class UserController {
     @GET
     @Path("current-user")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("user")
+    @RolesAllowed({"user", "administrator"})
     public Response getCurrentUser() {
         return Response
                 .status(Response.Status.OK)
@@ -144,7 +144,9 @@ public class UserController {
     public Response uploadImageToCurrentUser(UserUpdateImageDTO userUpdateImageDTO) {
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.uploadImageToCurrentUser(userUpdateImageDTO))
+                .entity(userMapper
+                        .userToUserResponseDTO(userService
+                                .uploadImageToCurrentUser(userUpdateImageDTO)))
                 .build();
     }
 
@@ -153,12 +155,12 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/update-password/{id}")
     @RolesAllowed("user")
-    public Response updatePassword(@PathParam("id")Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
+    public Response updatePassword(@PathParam("id") Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
         return Response
                 .status(Response.Status.OK)
                 .entity(userMapper
                         .userToUserResponseDTO(userService
-                                .updatePassword(id,userPasswordUpdateDTO)))
+                                .updatePassword(id, userPasswordUpdateDTO)))
                 .build();
     }
 

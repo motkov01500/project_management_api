@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectResponseDTO;
 import org.cbg.projectmanagement.project_management.dto.role.RoleResponseDTO;
 
+import java.sql.Blob;
 import java.util.List;
 import java.util.Set;
 

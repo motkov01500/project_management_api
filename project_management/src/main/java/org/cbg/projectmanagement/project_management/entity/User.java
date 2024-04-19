@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.sql.Blob;
 import java.util.Set;
 
 @Entity
@@ -48,9 +49,5 @@ public class User {
         this.password = password;
         this.fullName = fullName;
         this.role = role;
-    }
-
-    public void addProject(Project project) {
-        projects.add(project);
     }
 }

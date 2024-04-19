@@ -65,4 +65,13 @@ public class UserRepository extends BaseRepository<User> {
                 .where(criteriaBuilder.equal(userMeetingJoin.get(Meeting_.id),id));
         return getEntityByCriteriaa(query).getResultList();
     }
+
+    public boolean isUserExists(String username) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<User> query = getCriteriaQuery();
+        Root<User> userRoot = query.from(User.class);
+        query.select(userRoot)
+                .where(criteriaBuilder.equal(userRoot.get(User_.username),username));
+        return Optional.ofNullable(getEntityByCriteriaa(query).getSingleResult()).isPresent();
+    }
 }

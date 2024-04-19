@@ -4,6 +4,7 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.json.Json;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -93,6 +94,14 @@ public class UserService {
 
     public User register(RegisterDTO registerDTO) {
         User user = new User();
+        if(userRepository.isUserExists(registerDTO.getUsername())) {
+            throw new UsernameAlreadyExistsException("Username already exists", Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity(Json.createObjectBuilder()
+                            .add("message","Username already exists")
+                            .build())
+                    .build());
+        }
         user.setUsername(registerDTO.getUsername());
         Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}").matcher(registerDTO.getPassword());
         if(!matcher.find()) {
@@ -110,6 +119,7 @@ public class UserService {
         return user;
     }
 
+    @Transactional
     public User uploadImageToCurrentUser(UserUpdateImageDTO userUpdateImageDTO) {
         User currentUser = getUserByUsername(context.getUserPrincipal().getName());
         currentUser.setImageUrl(userUpdateImageDTO.getImageUrl());

@@ -2,7 +2,6 @@ package org.cbg.projectmanagement.project_management.service;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.json.Json;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
@@ -11,16 +10,12 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.task.TaskCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateProgressDTO;
-import org.cbg.projectmanagement.project_management.entity.Meeting;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.Task;
-import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.repository.TaskRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Stateless
 public class TaskService {
