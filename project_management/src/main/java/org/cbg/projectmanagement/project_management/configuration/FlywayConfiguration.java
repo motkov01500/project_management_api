@@ -2,6 +2,7 @@ package org.cbg.projectmanagement.project_management.configuration;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJBException;
+import jakarta.ejb.Stateless;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import org.flywaydb.core.Flyway;
