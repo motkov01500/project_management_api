@@ -1,11 +1,12 @@
 package org.cbg.projectmanagement.project_management.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import lombok.*;
-
-import java.io.Serializable;
-import java.sql.Blob;
 import java.util.Set;
 
 @Entity
@@ -50,4 +51,18 @@ public class User {
         this.fullName = fullName;
         this.role = role;
     }
+//
+//    public void setPassword(String password) {
+//        Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}")
+//                .matcher(password);
+//        if(!matcher.find()) {
+//            throw new ValidationException("Wrong password", Response
+//                    .status(Response.Status.BAD_REQUEST)
+//                    .entity(Json.createObjectBuilder()
+//                            .add("message", "Password must contains minimum one uppercase, one lowercase and one digit and must be at least 8 characters")
+//                            .build())
+//                    .build());
+//        }
+//        this.password = password;
+//    }
 }

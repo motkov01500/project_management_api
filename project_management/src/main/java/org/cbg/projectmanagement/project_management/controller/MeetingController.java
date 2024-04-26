@@ -1,22 +1,17 @@
 package org.cbg.projectmanagement.project_management.controller;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.meeting.MeetingResponseDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.service.MeetingService;
 
-import java.util.List;
 import java.util.stream.Collectors;
-
 
 @Path("/v1/meeting")
 public class MeetingController {

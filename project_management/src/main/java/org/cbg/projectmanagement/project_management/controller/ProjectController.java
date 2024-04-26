@@ -2,12 +2,14 @@ package org.cbg.projectmanagement.project_management.controller;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.json.Json;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
+import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.service.ProjectService;
 
@@ -102,18 +104,27 @@ public class ProjectController {
                 .build();
     }
 
+    //TODO:Create with give username, search user by username and add to the project. If user is already added to throw exception.
     @PATCH
     @Path("/administrator/assign-user-to-project")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
-        return Response
-                .status(Response.Status.OK)
-                .entity(projectService
-                        .assignUserToProject(projectAssignUserDTO.getUserId(),
-                                projectAssignUserDTO.getProjectId()))
-                .build();
+        try {
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(projectService
+                            .assignUserToProject(projectAssignUserDTO))
+                    .build();
+        } catch (UserAlreadyInProjectException e) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity(Json.createObjectBuilder()
+                            .add("message","kur")
+                            .build())
+                    .build();
+        }
     }
 
     @DELETE

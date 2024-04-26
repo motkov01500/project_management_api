@@ -2,6 +2,7 @@ package org.cbg.projectmanagement.project_management.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.security.enterprise.AuthenticationStatus;
@@ -13,7 +14,7 @@ import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Stateless
+@ApplicationScoped
 public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     @Inject

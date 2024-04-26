@@ -19,14 +19,11 @@ public class Task  {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_generator")
     @SequenceGenerator(name = "task_generator", sequenceName = "task_id_seq", schema = "public", allocationSize = 1)
-    @Column(nullable = false, unique = true)
+    @Column(name="id", nullable = false, unique = true)
     private Long id;
 
     @Column(name = "progress")
     private int progress;
-
-    @Column(name = "status")
-    private String status;
 
     @Column(name = "initial_estimation")
     private int initialEstimation;
@@ -38,12 +35,16 @@ public class Task  {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    public Task(int progress, String status, int initialEstimation,
-                int hoursSpent, Project project) {
+    @ManyToOne(targetEntity = TaskStatus.class)
+    @JoinColumn(name="task_status_id")
+    private TaskStatus taskStatus;
+
+    public Task(int progress, int initialEstimation,
+                int hoursSpent, Project project, TaskStatus taskStatus) {
         this.progress = progress;
-        this.status = status;
         this.initialEstimation = initialEstimation;
         this.hoursSpent = hoursSpent;
         this.project = project;
+        this.taskStatus = taskStatus;
     }
 }

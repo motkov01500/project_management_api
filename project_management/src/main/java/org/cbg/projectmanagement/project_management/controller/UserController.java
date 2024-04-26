@@ -70,8 +70,8 @@ public class UserController {
     }
 
     @GET
-    @Path("/get-all-related-to-project/{key}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get-all-related-to-project/{key}")
     @RolesAllowed({"user", "administrator"})
     public Response getUsersRelatedToProject(@PathParam("key") String key) {
         return Response
@@ -84,8 +84,8 @@ public class UserController {
     }
 
     @GET
-    @Path("current-user")
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("current-user")
     @RolesAllowed({"user", "administrator"})
     public Response getCurrentUser() {
         return Response
@@ -97,8 +97,8 @@ public class UserController {
     }
 
     @GET
-    @Path("/get-all-related-to-meeting/{meetingId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get-all-related-to-meeting/{meetingId}")
     @RolesAllowed("user")
     public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id) {
         return Response

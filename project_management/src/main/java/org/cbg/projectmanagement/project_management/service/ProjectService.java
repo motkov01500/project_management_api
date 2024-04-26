@@ -9,12 +9,14 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCheckForUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
 
 import java.util.List;
@@ -44,12 +46,19 @@ public class ProjectService {
     public Project findById(Long id) {
         return projectRepository
                 .findById(id)
-                .orElseThrow(()-> new NotFoundResourceException(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Json.createObjectBuilder()
-                                .add("message","Project was not found")
-                                .build())
-                        .build()));
+                .orElseThrow(()-> new NotFoundResourceException("Project was not found"));
+    }
+
+    public Project findByKey(String projectKey) {
+        return projectRepository
+                .findProjectByKey(projectKey)
+                .orElseThrow(()-> new NotFoundResourceException("Project was not found"));
+    }
+
+    public boolean isUserInProject(ProjectAssignUserDTO projectAssignUserDTO) {
+        return projectRepository
+                .isUserInProject(projectAssignUserDTO.getProjectKey(),
+                        projectAssignUserDTO.getUsername());
     }
 
     public List<Project> findUnassignedProjects() {
@@ -80,9 +89,12 @@ public class ProjectService {
     }
 
     @Transactional
-    public JsonObject assignUserToProject(Long userId, Long projectId) {
-        User currentUser = userService.findUserById(userId);
-        Project currentProject = findById(projectId);
+    public JsonObject assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
+        User currentUser = userService.getUserByUsername(projectAssignUserDTO.getUsername());
+        Project currentProject = findByKey(projectAssignUserDTO.getProjectKey());
+        if(isUserInProject(projectAssignUserDTO)) {
+            throw new UserAlreadyInProjectException("User already in current project");
+        }
         currentProject.addUser(currentUser);
         projectRepository.update(currentProject);
         return Json.createObjectBuilder()

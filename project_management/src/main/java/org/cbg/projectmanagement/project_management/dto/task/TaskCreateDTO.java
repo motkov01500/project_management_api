@@ -9,7 +9,7 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class TaskCreateDTO {
 
-    private String status;
+    private String statusName;
     private int initialEstimation;
     private Long projectId;
 }

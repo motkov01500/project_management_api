@@ -59,23 +59,13 @@ public class UserService {
     public User getUserByUsername(String username) throws NotFoundResourceException {
         return userRepository
                 .getUserByUsername(username)
-                .orElseThrow(()-> new NotFoundResourceException(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Json.createObjectBuilder()
-                                .add("message","User was not found!")
-                                .build())
-                        .build()));
+                .orElseThrow(()-> new NotFoundResourceException("User was not found!"));
     }
 
     public User findUserById(Long id) {
         return userRepository
                 .findById(id)
-                .orElseThrow(()-> new NotFoundResourceException(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Json.createObjectBuilder()
-                                .add("message","User was not found")
-                                .build())
-                        .build()));
+                .orElseThrow(()-> new NotFoundResourceException("User was not found"));
     }
 
     public List<User> getUnassignedUsers() {
@@ -95,23 +85,10 @@ public class UserService {
     public User register(RegisterDTO registerDTO) {
         User user = new User();
         if(userRepository.isUserExists(registerDTO.getUsername())) {
-            throw new UsernameAlreadyExistsException("Username already exists", Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity(Json.createObjectBuilder()
-                            .add("message","Username already exists")
-                            .build())
-                    .build());
+            throw new UsernameAlreadyExistsException("Username already exists");
         }
         user.setUsername(registerDTO.getUsername());
-        Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}").matcher(registerDTO.getPassword());
-        if(!matcher.find()) {
-            throw new ValidationException("Wrong password", Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity(Json.createObjectBuilder()
-                            .add("message", "Password must contains minimum one uppercase, one lowercase and one digit and must be at least 8 characters")
-                            .build())
-                    .build());
-        }
+        validatePassword(registerDTO.getPassword());
         user.setPassword(hashPassword(registerDTO.getPassword()));
         user.setRole(roleService.findRoleByName("user"));
         user.setFullName(registerDTO.getFullName());
@@ -142,12 +119,7 @@ public class UserService {
             if(userRepository.getUserByUsername(userUpdateDTO.getUsername()).isEmpty()) {
                 user.setUsername(userUpdateDTO.getUsername());
             } else {
-                throw new UsernameAlreadyExistsException("Username already exists", Response
-                        .status(Response.Status.BAD_REQUEST)
-                        .entity(Json.createObjectBuilder()
-                                .add("message","Username already exists")
-                                .build())
-                        .build());
+                throw new UsernameAlreadyExistsException("Username already exists");
             }
         }
 
@@ -183,5 +155,14 @@ public class UserService {
 
     public boolean checkPassword(String password, String hashed) {
         return BCrypt.checkpw(password, hashed);
+    }
+
+    public void validatePassword(String password) {
+        Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}")
+                .matcher(password);
+        if(!matcher.find()) {
+            throw new ValidationException("Password must contains minimum one uppercase, one lowercase and " +
+                    "one digit and must be at least 8 characters");
+        }
     }
 }

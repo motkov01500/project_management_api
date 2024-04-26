@@ -4,44 +4,50 @@ CREATE TABLE role(
 );
 
 CREATE TABLE userr(
-                      id SERIAL NOT NULL PRIMARY KEY,
-                      username VARCHAR(200) NOT NULL,
-                      password VARCHAR(500) NOT NULL,
-                      full_name VARCHAR(120),
-                      image_url VARCHAR,
-                      role_id SERIAL
+                     id SERIAL NOT NULL PRIMARY KEY,
+                     username VARCHAR(200) NOT NULL,
+                     password VARCHAR(500) NOT NULL,
+                     full_name VARCHAR(120),
+                     image_url VARCHAR,
+                     role_id SERIAL
 );
 
 CREATE TABLE project(
-                        id SERIAL NOT NULL PRIMARY KEY,
-                        key VARCHAR(10) NOT NULL,
-                        title VARCHAR(50)
+                     id SERIAL NOT NULL PRIMARY KEY,
+                     key VARCHAR(10) NOT NULL,
+                     title VARCHAR(50)
+);
+
+
+CREATE TABLE task_status(
+                     id SERIAL NOT NULL PRIMARY KEY,
+                     name VARCHAR(30)
 );
 
 CREATE TABLE task(
                      id SERIAL NOT NULL PRIMARY KEY,
                      progress INTEGER,
-                     status VARCHAR,
                      initial_estimation INTEGER,
                      hours_spent INTEGER,
-                     project_id SERIAL
+                     project_id SERIAL,
+                     task_status_id SERIAL
 );
 
 CREATE TABLE meeting(
-                        id SERIAL NOT NULL PRIMARY KEY,
-                        date TIMESTAMP NOT NULL,
-                        status VARCHAR,
-                        project_id SERIAL
+                     id SERIAL NOT NULL PRIMARY KEY,
+                     date TIMESTAMP NOT NULL,
+                     status VARCHAR,
+                     project_id SERIAL
 );
 
 CREATE TABLE user_project(
-                             userr_id SERIAL NOT NULL ,
-                             project_id SERIAL NOT NULL
+                     userr_id SERIAL NOT NULL ,
+                     project_id SERIAL NOT NULL
 );
 
 CREATE TABLE user_meeting(
-    userr_id SERIAL NOT NULL,
-    meeting_id SERIAL NOT NULL
+                     userr_id SERIAL NOT NULL,
+                     meeting_id SERIAL NOT NULL
 );
 
 ALTER TABLE userr
@@ -54,7 +60,10 @@ ALTER TABLE project
     ADD CONSTRAINT uniq_project_key UNIQUE(key);
 
 ALTER TABLE task
-    ADD CONSTRAINT fk_task_project  FOREIGN KEY(project_id) REFERENCES project (id);
+    ADD CONSTRAINT fk_task_project  FOREIGN KEY(project_id) REFERENCES project(id);
+
+ALTER TABLE task
+    ADD CONSTRAINT fk_task_status_task FOREIGN KEY(task_status_id) REFERENCES task_status(id);
 
 ALTER TABLE meeting
     ADD CONSTRAINT fk_meeting_project FOREIGN KEY(project_id) REFERENCES project(id);

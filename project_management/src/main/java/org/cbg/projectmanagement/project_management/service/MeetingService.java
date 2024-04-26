@@ -49,13 +49,7 @@ public class MeetingService {
     public Meeting findById(Long id) {
         return meetingRepository
                 .findById(id)
-                .orElseThrow(()-> new NotFoundResourceException(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Json.createObjectBuilder()
-                                    .add("message","Meeting was not found")
-                                .build())
-                        .build()
-                        ));
+                .orElseThrow(()-> new NotFoundResourceException("Meeting was not found"));
     }
 
     @Transactional

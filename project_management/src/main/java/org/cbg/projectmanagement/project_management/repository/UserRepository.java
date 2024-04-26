@@ -29,7 +29,7 @@ public class UserRepository extends BaseRepository<User> {
         CriteriaQuery<User> query = getCriteriaQuery();
         Root<User> userRoot = query.from(User.class);
         query.select(userRoot)
-                .where(criteriaBuilder.equal(userRoot.get(User_.username),username));
+                .where(criteriaBuilder.equal(userRoot.get(User_.username), username));
         return Optional.ofNullable(getEntityByCriteriaa(query).getSingleResult());
     }
 
@@ -72,6 +72,6 @@ public class UserRepository extends BaseRepository<User> {
         Root<User> userRoot = query.from(User.class);
         query.select(userRoot)
                 .where(criteriaBuilder.equal(userRoot.get(User_.username),username));
-        return Optional.ofNullable(getEntityByCriteriaa(query).getSingleResult()).isPresent();
+        return !getEntityByCriteriaa(query).getResultList().isEmpty();
     }
 }

@@ -1,12 +1,11 @@
 package org.cbg.projectmanagement.project_management.dto.auth;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-@EqualsAndHashCode
+
+@Data
+@NoArgsConstructor
 public class RegisterDTO {
 
     private String username;

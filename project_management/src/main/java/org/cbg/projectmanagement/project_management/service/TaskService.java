@@ -12,6 +12,7 @@ import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateProgressDTO;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.Task;
+import org.cbg.projectmanagement.project_management.entity.TaskStatus;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.repository.TaskRepository;
 
@@ -27,7 +28,7 @@ public class TaskService {
     private ProjectService projectService;
 
     @Inject
-    private UserService userService;
+    private TaskStatusService taskStatusService;
 
     @Context
     private SecurityContext context;
@@ -40,12 +41,7 @@ public class TaskService {
     public Task findById(Long id) {
         return taskRepository
                 .findById(id)
-                .orElseThrow(() -> new NotFoundResourceException(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Json.createObjectBuilder()
-                                .add("message", "Task was not found")
-                                .build())
-                        .build()));
+                .orElseThrow(() -> new NotFoundResourceException("Task was not found"));
     }
 
     @Transactional
@@ -57,8 +53,9 @@ public class TaskService {
     @Transactional
     public Task create(TaskCreateDTO taskCreateDTO) {
         Project project = projectService.findById(taskCreateDTO.getProjectId());
-        Task newTask = new Task(0, taskCreateDTO.getStatus(),
-                taskCreateDTO.getInitialEstimation(), 0, project);
+        TaskStatus taskStatus = taskStatusService.findByName(taskCreateDTO.getStatusName());
+        Task newTask = new Task(0,
+                taskCreateDTO.getInitialEstimation(), 0, project, taskStatus);
         taskRepository.create(newTask);
         return newTask;
     }
@@ -69,16 +66,17 @@ public class TaskService {
         return currentTask == null ? findById(id) : currentTask;
     }
 
+    @Transactional
     public Task updateProgress(Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
         Task currentTask = findById(id);
         currentTask.setProgress(taskUpdateProgressDTO.getProgress());
-        if (taskUpdateProgressDTO.getProgress() == 100) {
-            currentTask.setStatus("DONE");
-        }
+        currentTask.setTaskStatus(taskStatusService
+                .findByName("DONE"));
         taskRepository.update(currentTask);
         return currentTask;
     }
 
+    @Transactional
     public Task updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
         Task currentTask = findById(id);
 
@@ -86,9 +84,8 @@ public class TaskService {
             currentTask.setProgress(taskUpdateDTO.getProgress());
         }
 
-        if (!(taskUpdateDTO.getStatus().isEmpty())
-                && !(taskUpdateDTO.getStatus().equals(currentTask.getStatus()))) {
-            currentTask.setStatus(taskUpdateDTO.getStatus());
+        if (!(taskUpdateDTO.getStatusName().isEmpty())) {
+            currentTask.setTaskStatus(taskStatusService.findByName(taskUpdateDTO.getStatusName()));
         }
 
         if (taskUpdateDTO.getHoursSpent() > currentTask.getHoursSpent()) {

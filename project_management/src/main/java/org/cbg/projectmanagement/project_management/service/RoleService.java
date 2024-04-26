@@ -18,12 +18,6 @@ public class RoleService {
     public Role findRoleByName(String name) {
         return roleRepository
                 .getRoleByName(name)
-                .orElseThrow(() -> new NotFoundResourceException(
-                        Response
-                                .status(Response.Status.NOT_FOUND)
-                                .entity(Json.createObjectBuilder()
-                                        .add("message", "Role was not found")
-                                        .build())
-                                .build()));
+                .orElseThrow(() -> new NotFoundResourceException("Role was not found"));
     }
 }

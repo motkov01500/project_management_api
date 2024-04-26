@@ -2,6 +2,7 @@ package org.cbg.projectmanagement.project_management.controller;
 
 import jakarta.inject.Inject;
 import jakarta.json.Json;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -28,9 +29,9 @@ public class AuthController {
     private UserService userService;
 
     @POST
-    @Path("login")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Path("login")
     public Response login(AuthLoginDTO authLoginDTO) {
         if(context.getUserPrincipal().getName() != null) {
             return Response
@@ -49,9 +50,9 @@ public class AuthController {
     }
 
     @POST
-    @Path("register")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Path("register")
     public Response register(RegisterDTO registerDTO) {
         return Response
                 .status(Response.Status.OK)
