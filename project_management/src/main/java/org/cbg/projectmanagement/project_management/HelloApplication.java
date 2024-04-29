@@ -6,6 +6,4 @@ import jakarta.ws.rs.core.Application;
 
 @ApplicationPath("/api")
 @DeclareRoles({"administrator", "user"})
-public class HelloApplication extends Application {
-
-}
+public class HelloApplication extends Application {}

@@ -9,6 +9,6 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class ProjectAssignUserDTO {
 
-    private String username;
-    private String projectKey;
+    private Long userId;
+    private Long projectId;
 }

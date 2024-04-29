@@ -106,6 +106,7 @@ public class UserService {
 
     public User updatePassword(Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
         User user = findUserById(id);
+        validatePassword(userPasswordUpdateDTO.getPassword());
         user.setPassword(hashPassword(userPasswordUpdateDTO.getPassword()));
         userRepository.update(user);
         return user;
@@ -149,7 +150,7 @@ public class UserService {
         userRepository.delete(id);
     }
 
-    public String hashPassword(String password) {
+    private String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
@@ -157,7 +158,7 @@ public class UserService {
         return BCrypt.checkpw(password, hashed);
     }
 
-    public void validatePassword(String password) {
+    private void validatePassword(String password) {
         Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}")
                 .matcher(password);
         if(!matcher.find()) {

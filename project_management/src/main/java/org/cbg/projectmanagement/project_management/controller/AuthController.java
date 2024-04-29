@@ -32,7 +32,7 @@ public class AuthController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("login")
-    public Response login(AuthLoginDTO authLoginDTO) {
+    public Response login() {
         if(context.getUserPrincipal().getName() != null) {
             return Response
                     .status(Response.Status.OK)

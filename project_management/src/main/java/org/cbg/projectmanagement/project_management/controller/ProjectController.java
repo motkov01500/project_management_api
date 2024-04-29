@@ -69,7 +69,7 @@ public class ProjectController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
     public Response getCurrentLoggedUserProjects() {
-        return  Response
+        return Response
                 .status(Response.Status.OK)
                 .entity(projectService.findCurrentUserProjects()
                         .stream()
@@ -111,20 +111,11 @@ public class ProjectController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
-        try {
-            return Response
-                    .status(Response.Status.OK)
-                    .entity(projectService
-                            .assignUserToProject(projectAssignUserDTO))
-                    .build();
-        } catch (UserAlreadyInProjectException e) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity(Json.createObjectBuilder()
-                            .add("message","kur")
-                            .build())
-                    .build();
-        }
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectService
+                        .assignUserToProject(projectAssignUserDTO))
+                .build();
     }
 
     @DELETE

@@ -55,10 +55,9 @@ public class ProjectService {
                 .orElseThrow(()-> new NotFoundResourceException("Project was not found"));
     }
 
-    public boolean isUserInProject(ProjectAssignUserDTO projectAssignUserDTO) {
+    public boolean isUserInProject(String projectKey, String username) {
         return projectRepository
-                .isUserInProject(projectAssignUserDTO.getProjectKey(),
-                        projectAssignUserDTO.getUsername());
+                .isUserInProject(projectKey,username);
     }
 
     public List<Project> findUnassignedProjects() {
@@ -90,9 +89,9 @@ public class ProjectService {
 
     @Transactional
     public JsonObject assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
-        User currentUser = userService.getUserByUsername(projectAssignUserDTO.getUsername());
-        Project currentProject = findByKey(projectAssignUserDTO.getProjectKey());
-        if(isUserInProject(projectAssignUserDTO)) {
+        User currentUser = userService.findUserById(projectAssignUserDTO.getUserId());
+        Project currentProject = findById(projectAssignUserDTO.getProjectId());
+        if(isUserInProject(currentProject.getKey(), currentUser.getUsername())) {
             throw new UserAlreadyInProjectException("User already in current project");
         }
         currentProject.addUser(currentUser);
