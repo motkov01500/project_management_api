@@ -10,4 +10,6 @@ import lombok.Setter;
 public class UserUpdateImageDTO {
 
     private String imageUrl;
+    private int size;
+    private String fileType;
 }

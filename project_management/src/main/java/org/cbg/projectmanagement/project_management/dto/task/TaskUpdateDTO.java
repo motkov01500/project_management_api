@@ -3,6 +3,7 @@ package org.cbg.projectmanagement.project_management.dto.task;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.cbg.projectmanagement.project_management.enums.TaskStatus;
 
 @Getter
 @Setter
@@ -10,6 +11,5 @@ import lombok.Setter;
 public class TaskUpdateDTO {
 
     private int progress;
-    private String statusName;
     private int hoursSpent;
 }

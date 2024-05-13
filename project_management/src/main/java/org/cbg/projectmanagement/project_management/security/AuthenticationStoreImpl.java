@@ -18,7 +18,7 @@ import static java.util.Collections.singleton;
 public class AuthenticationStoreImpl implements IdentityStore {
 
     @Inject
-    UserService userService;
+    private UserService userService;
 
     @Override
     public CredentialValidationResult validate(Credential credential) {

@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import jakarta.persistence.*;
+import org.cbg.projectmanagement.project_management.enums.TaskStatus;
 
+import java.util.Set;
 
 @Entity
 @Table(name = "task", schema = "public")
@@ -25,26 +27,34 @@ public class Task  {
     @Column(name = "progress")
     private int progress;
 
+    @Column(name = "task_status")
+    private String taskStatus;
+
     @Column(name = "initial_estimation")
     private int initialEstimation;
 
     @Column(name = "hours_spent")
     private int hoursSpent;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
     @ManyToOne(targetEntity = Project.class)
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToOne(targetEntity = TaskStatus.class)
-    @JoinColumn(name="task_status_id")
-    private TaskStatus taskStatus;
+    @ManyToMany(targetEntity = User.class)
+    @JoinTable(name = "user_task",
+            joinColumns = {@JoinColumn(name = "task_id")},
+            inverseJoinColumns = {@JoinColumn(name = "userr_id")})
+    private Set<User> users;
 
-    public Task(int progress, int initialEstimation,
-                int hoursSpent, Project project, TaskStatus taskStatus) {
+    public Task(int progress, int initialEstimation, int hoursSpent, Project project, String taskStatus, Boolean isDeleted) {
         this.progress = progress;
+        this.taskStatus = taskStatus;
         this.initialEstimation = initialEstimation;
         this.hoursSpent = hoursSpent;
         this.project = project;
-        this.taskStatus = taskStatus;
+        this.isDeleted = isDeleted;
     }
 }

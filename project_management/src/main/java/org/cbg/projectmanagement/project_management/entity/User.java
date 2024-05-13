@@ -35,6 +35,9 @@ public class User {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
     @ManyToOne(targetEntity = Role.class)
     @JoinColumn(name = "role_id")
     private Role role;
@@ -45,24 +48,14 @@ public class User {
     @ManyToMany(mappedBy = "users")
     private Set<Meeting> meetings;
 
-    public User(String username, String password, String fullName, Role role) {
+    @ManyToMany(mappedBy = "users")
+    private Set<Task> tasks;
+
+    public User(String username, String password, String fullName, Role role, Boolean isDeleted) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.role = role;
+        this.isDeleted = isDeleted;
     }
-//
-//    public void setPassword(String password) {
-//        Matcher matcher = Pattern.compile("(?=.*[a-z])(?=.*[A-Z]).{8,}")
-//                .matcher(password);
-//        if(!matcher.find()) {
-//            throw new ValidationException("Wrong password", Response
-//                    .status(Response.Status.BAD_REQUEST)
-//                    .entity(Json.createObjectBuilder()
-//                            .add("message", "Password must contains minimum one uppercase, one lowercase and one digit and must be at least 8 characters")
-//                            .build())
-//                    .build());
-//        }
-//        this.password = password;
-//    }
 }

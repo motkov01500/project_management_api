@@ -12,5 +12,5 @@ import java.time.LocalDateTime;
 public class MeetingUpdateDTO {
 
     private LocalDateTime date;
-    private String status;
+    private String title;
 }

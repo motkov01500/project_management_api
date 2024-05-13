@@ -44,6 +44,19 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/find-not-assigned-to-meeting-users/{meetingId}")
+    @RolesAllowed("administrator")
+    public Response getNotAssignedToMeeting(@PathParam("meetingId") Long meetingId){
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.findUsersNotAssignedToMeeting(meetingId)
+                        .stream().map(userMapper::userToUserResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/administrator/get-by-id/{id}")
     @RolesAllowed("administrator")
     public Response getById(@PathParam("id") long id) {

@@ -18,10 +18,10 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     @Inject
-    IdentityStoreHandler identityStoreHandler;
+    private IdentityStoreHandler identityStoreHandler;
 
     @Inject
-    TokenProvider tokenProvider;
+    private TokenProvider tokenProvider;
 
     @Override
     public AuthenticationStatus validateRequest(HttpServletRequest request, HttpServletResponse response, HttpMessageContext context) {
@@ -34,10 +34,12 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return createToken(result, context);
             }
+            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         } else if (token != null) {
             return validateToken(token, context);
         } else if(context.isProtected()) {
+            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         }
 
@@ -50,8 +52,10 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
                 UserDetails userDetails = tokenProvider.getUserDetails(token);
                 return context.notifyContainerAboutLogin(userDetails.getPrincipal(), userDetails.getAuthority());
             }
+            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         } catch (ExpiredJwtException e) {
+            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         }
     }
@@ -68,6 +72,15 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
             String token = authorizationHeader.substring("Bearer".length(), authorizationHeader.length());
             return token;
         }
+        addCorsHeaders(context.getResponse());
         return null;
+    }
+
+    private void addCorsHeaders(HttpServletResponse response) {
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+
     }
 }

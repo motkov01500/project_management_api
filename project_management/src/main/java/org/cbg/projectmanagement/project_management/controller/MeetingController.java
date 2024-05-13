@@ -37,6 +37,20 @@ public class MeetingController {
     }
 
     @GET
+    @Path("/get-current-user-meetings/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"administrator", "user"})
+    public Response getCurrentUserRelatedMeetings(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProject(projectKey)
+                        .stream()
+                        .map(meetingMapper::mapMeetingToMeetingDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
     @Path("/administrator/get-by-id/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
@@ -62,6 +76,7 @@ public class MeetingController {
                 .build();
     }
 
+    //TODO:OPTIONAL*-present all user meetings in calendar view
     @GET
     @Path("/get-all-related-meetings")
     @Produces(MediaType.APPLICATION_JSON)
@@ -75,6 +90,21 @@ public class MeetingController {
                         .collect(Collectors.toList()))
                 .build();
     }
+
+    @GET
+    @Path("/get-all-related-to-project/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"user","administrator"})
+    public Response getProjectRelatedMeetings(@PathParam("projectKey") String key) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingRelatedToProject(key)
+                        .stream()
+                        .map(meetingMapper::mapMeetingToMeetingDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
 
     @POST
     @Path("/administrator/create")

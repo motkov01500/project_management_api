@@ -12,6 +12,6 @@ import java.time.LocalDateTime;
 public class MeetingCreateDTO {
 
     private LocalDateTime date;
-    private String status;
+    private String title;
     private Long projectId;
 }

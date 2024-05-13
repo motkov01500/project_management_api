@@ -4,14 +4,13 @@ import jakarta.json.Json;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
-import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.exception.DeleteAdminUserException;
 
-//TODO: CREATE A DEFAULT TO BE FOR 500. And logger(LogBack). I18NInternationalization
 @Provider
-public class NotFoundResourceExceptionHandler implements ExceptionMapper<NotFoundResourceException> {
+public class DeleteAdminUserExceptionHandler implements ExceptionMapper<DeleteAdminUserException> {
 
     @Override
-    public Response toResponse(NotFoundResourceException e) {
+    public Response toResponse(DeleteAdminUserException e) {
         return Response
                 .status(Response.Status.BAD_REQUEST)
                 .entity(Json.createObjectBuilder()

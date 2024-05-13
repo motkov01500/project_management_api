@@ -8,7 +8,7 @@ COPY . /app
 WORKDIR /app
 
 # Compile and package the application
-RUN mvn package
+RUN mvn clean package
 
 # Stage 2: Set up Payara Server
 FROM payara/server-full:5.2022.5-jdk11

@@ -78,6 +78,18 @@ public class ProjectController {
                 .build();
     }
 
+    @GET
+    @Path("/get-project-by-key/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"user","administrator"})
+    public Response getProjectByKey(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectMapper
+                        .mapProjectToProjectDTO(projectService.findByKey(projectKey))
+                ).build();
+    }
+
     @POST
     @Path("/administrator/create")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -104,7 +116,6 @@ public class ProjectController {
                 .build();
     }
 
-    //TODO:Create with give username, search user by username and add to the project. If user is already added to throw exception.
     @PATCH
     @Path("/administrator/assign-user-to-project")
     @Consumes(MediaType.APPLICATION_JSON)

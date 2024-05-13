@@ -18,25 +18,20 @@ CREATE TABLE project(
                      title VARCHAR(50)
 );
 
-
-CREATE TABLE task_status(
-                     id SERIAL NOT NULL PRIMARY KEY,
-                     name VARCHAR(30)
-);
-
 CREATE TABLE task(
                      id SERIAL NOT NULL PRIMARY KEY,
                      progress INTEGER,
+                     task_status varchar(20),
                      initial_estimation INTEGER,
                      hours_spent INTEGER,
-                     project_id SERIAL,
-                     task_status_id SERIAL
+                     project_id SERIAL
 );
 
 CREATE TABLE meeting(
                      id SERIAL NOT NULL PRIMARY KEY,
+                     title VARCHAR NOT NULL,
+                     duration INTEGER NOT NULL,
                      date TIMESTAMP NOT NULL,
-                     status VARCHAR,
                      project_id SERIAL
 );
 
@@ -50,6 +45,11 @@ CREATE TABLE user_meeting(
                      meeting_id SERIAL NOT NULL
 );
 
+CREATE TABLE user_task(
+                     task_id SERIAL NOT NULL ,
+                     userr_id SERIAL NOT NULl
+);
+
 ALTER TABLE userr
     ADD CONSTRAINT fk_userr_role FOREIGN KEY(role_id) REFERENCES role (id);
 
@@ -61,9 +61,6 @@ ALTER TABLE project
 
 ALTER TABLE task
     ADD CONSTRAINT fk_task_project  FOREIGN KEY(project_id) REFERENCES project(id);
-
-ALTER TABLE task
-    ADD CONSTRAINT fk_task_status_task FOREIGN KEY(task_status_id) REFERENCES task_status(id);
 
 ALTER TABLE meeting
     ADD CONSTRAINT fk_meeting_project FOREIGN KEY(project_id) REFERENCES project(id);
@@ -79,3 +76,9 @@ ALTER TABLE user_meeting
 
 ALTER TABLE user_meeting
     ADD CONSTRAINT fk_user_meeting_meeting FOREIGN KEY (meeting_id) REFERENCES meeting(id);
+
+ALTER TABLE user_task
+    ADD CONSTRAINT fk_user_task_task FOREIGN KEY(task_id) REFERENCES task(id);
+
+ALTER TABLE user_task
+    ADD CONSTRAINT fk_user_task_user FOREIGN KEY(userr_id) REFERENCES userr(id);

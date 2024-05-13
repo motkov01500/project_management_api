@@ -9,5 +9,7 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class UserPasswordUpdateDTO {
 
-    private String password;
+    private String oldPassword;
+    private String newPassword;
+    private String confirmedNewPassword;
 }

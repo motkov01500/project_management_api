@@ -6,12 +6,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import org.cbg.projectmanagement.project_management.entity.Role;
 import org.cbg.projectmanagement.project_management.entity.Role_;
-import org.cbg.projectmanagement.project_management.entity.TaskStatus;
-import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Stateless

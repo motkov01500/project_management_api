@@ -6,7 +6,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -29,18 +32,25 @@ public class Project {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
     @ManyToMany
     @JoinTable(name = "user_project",
             joinColumns = {@JoinColumn(name = "project_id")},
             inverseJoinColumns = {@JoinColumn(name = "userr_id")})
     private Set<User> users;
 
-    public Project(String key, String title) {
+    @OneToMany(mappedBy = "project", orphanRemoval = true, cascade = CascadeType.REMOVE, targetEntity = Meeting.class)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<Meeting> meetingSet;
+
+    @OneToMany(mappedBy = "project", orphanRemoval = true, cascade = CascadeType.REMOVE, targetEntity = Task.class)
+    private Set<Task> taskSet;
+
+    public Project(String key, String title, Boolean isDeleted) {
         this.key = key;
         this.title = title;
-    }
-
-    public void addUser(User user) {
-        users.add(user);
+        this.isDeleted = isDeleted;
     }
 }

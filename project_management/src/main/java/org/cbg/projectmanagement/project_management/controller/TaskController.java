@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.cbg.projectmanagement.project_management.dto.task.AssignUserToTaskDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateProgressDTO;
@@ -37,13 +38,13 @@ public class TaskController {
     }
 
     @GET
-    @Path("/current-user-related")
+    @Path("/administrator/get-all-related-to-project/{projectKey}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("user")
-    public Response getUserRelated() {
+    @RolesAllowed("administrator")
+    public Response getAllRelatedToProject(@PathParam("projectKey") String projectKey) {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.getTasksRelatedToCurrentUserProject()
+                .entity(taskService.findAllRelatedToProject(projectKey)
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
@@ -51,9 +52,23 @@ public class TaskController {
     }
 
     @GET
-    @Path("/administrator/get-by-id/{id}")
+    @Path("/current-user-project-related/{projectKey}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("administrator")
+    @RolesAllowed("user")
+    public Response getUserRelated(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(taskService.getTasksRelatedToCurrentUserAndProject(projectKey)
+                        .stream()
+                        .map(taskMapper::mapTaskToTaskDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/get-by-id/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"user", "administrator"})
     public Response getById(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.OK)
@@ -92,25 +107,24 @@ public class TaskController {
     @Path("/update-progress/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("user")
-    public Response updateTaskProgressByUser(@PathParam("id")Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
+    @RolesAllowed({"user", "administrator"})
+    public Response updateTaskProgress(@PathParam("id") Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
         return Response
                 .status(Response.Status.OK)
                 .entity(taskMapper
-                        .mapTaskToTaskDTO(taskService.updateProgressForUser(id,taskUpdateProgressDTO)))
+                        .mapTaskToTaskDTO(taskService.updateProgress(id, taskUpdateProgressDTO)))
                 .build();
     }
 
     @PATCH
-    @Path("/administrator/update-progress/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/assign-user-to-task")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response updateTaskProgressByAdministrator(@PathParam("id")Long id, TaskUpdateProgressDTO taskUpdateProgressDTO) {
+    public Response assignUserToTask(AssignUserToTaskDTO assignUserToTaskDTO) {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskMapper
-                        .mapTaskToTaskDTO(taskService.updateProgress(id,taskUpdateProgressDTO)))
+                .entity(taskService.assignUserToTask(assignUserToTaskDTO))
                 .build();
     }
 

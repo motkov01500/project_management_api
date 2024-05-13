@@ -4,18 +4,17 @@ import jakarta.json.Json;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
-import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.exception.MeetingOutdatedException;
 
-//TODO: CREATE A DEFAULT TO BE FOR 500. And logger(LogBack). I18NInternationalization
 @Provider
-public class NotFoundResourceExceptionHandler implements ExceptionMapper<NotFoundResourceException> {
+public class MeetingOutdatedExceptionHandler implements ExceptionMapper<MeetingOutdatedException> {
 
     @Override
-    public Response toResponse(NotFoundResourceException e) {
+    public Response toResponse(MeetingOutdatedException exception) {
         return Response
                 .status(Response.Status.BAD_REQUEST)
                 .entity(Json.createObjectBuilder()
-                        .add("message", e.getMessage())
+                        .add("message",exception.getMessage())
                         .build())
                 .build();
     }

@@ -26,8 +26,14 @@ public class Meeting {
     @Column(name = "date")
     private LocalDateTime date;
 
-    @Column(name = "status", columnDefinition = "meeting_status")
-    private String status;
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
+    @Column(name = "duration")
+    private int duration;
 
     @ManyToOne(targetEntity = Project.class)
     @JoinColumn(name = "project_id")
@@ -39,9 +45,10 @@ public class Meeting {
             inverseJoinColumns = {@JoinColumn(name = "userr_id")})
     private Set<User> users;
 
-    public Meeting(LocalDateTime date, String status, Project project) {
+    public Meeting(LocalDateTime date, String title, Project project, Boolean isDeleted) {
         this.date = date;
-        this.status = status;
+        this.title = title;
         this.project = project;
+        this.isDeleted = isDeleted;
     }
 }

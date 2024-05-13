@@ -19,5 +19,6 @@ public class UserResponseDTO {
     private String username;
     private String fullName;
     private String imageUrl;
+    private Boolean isDeleted;
     private RoleResponseDTO role;
 }

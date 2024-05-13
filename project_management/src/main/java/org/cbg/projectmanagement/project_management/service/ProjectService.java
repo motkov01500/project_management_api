@@ -2,15 +2,12 @@ package org.cbg.projectmanagement.project_management.service;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectCheckForUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Project;
@@ -30,6 +27,12 @@ public class ProjectService {
     @Inject
     private UserService userService;
 
+    @Inject
+    private MeetingService meetingService;
+
+    @Inject
+    private TaskService taskService;
+
     @Context
     private SecurityContext context;
 
@@ -44,30 +47,35 @@ public class ProjectService {
     }
 
     public Project findById(Long id) {
-        return projectRepository
+        Project project = projectRepository
                 .findById(id)
-                .orElseThrow(()-> new NotFoundResourceException("Project was not found"));
+                .orElseThrow(() -> new NotFoundResourceException("Project was not found"));
+        validateDeletedProject(project);
+        return project;
     }
 
     public Project findByKey(String projectKey) {
-        return projectRepository
+        Project project = projectRepository
                 .findProjectByKey(projectKey)
-                .orElseThrow(()-> new NotFoundResourceException("Project was not found"));
+                .orElseThrow(() -> new NotFoundResourceException("Project was not found"));
+        validateDeletedProject(project);
+        return project;
     }
 
     public boolean isUserInProject(String projectKey, String username) {
         return projectRepository
-                .isUserInProject(projectKey,username);
+                .isUserInProject(projectKey, username);
     }
 
     public List<Project> findUnassignedProjects() {
-        return  projectRepository
+        return projectRepository
                 .findUnassignedProjects();
     }
 
     @Transactional
     public Project create(ProjectCreateDTO projectCreateDTO) {
-        Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle());
+        Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle(),
+                Boolean.FALSE);
         projectRepository.create(project);
         return project;
     }
@@ -91,17 +99,26 @@ public class ProjectService {
     public JsonObject assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
         User currentUser = userService.findUserById(projectAssignUserDTO.getUserId());
         Project currentProject = findById(projectAssignUserDTO.getProjectId());
-        if(isUserInProject(currentProject.getKey(), currentUser.getUsername())) {
+        if (isUserInProject(currentProject.getKey(), currentUser.getUsername())) {
             throw new UserAlreadyInProjectException("User already in current project");
         }
-        currentProject.addUser(currentUser);
+        currentProject.getUsers().add(currentUser);
         projectRepository.update(currentProject);
         return Json.createObjectBuilder()
-                .add("message","User is successfully added to project")
+                .add("message", "User is successfully assigned to project.")
                 .build();
     }
 
+    @Transactional
     public void delete(Long id) {
+        meetingService.deleteRelatedToProjectMeetings(id);
+        taskService.deleteRelatedToProjectTasks(id);
         projectRepository.delete(id);
+    }
+
+    private void validateDeletedProject(Project project) {
+        if(project.getIsDeleted()) {
+            throw new NotFoundResourceException("Project was not found.");
+        }
     }
 }

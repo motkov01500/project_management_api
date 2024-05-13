@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectResponseDTO;
-import org.cbg.projectmanagement.project_management.dto.task_status.TaskStatusResponseDTO;
 
 @Getter
 @Setter
@@ -17,6 +16,7 @@ public class TaskResponseDTO {
     private int progress;
     private int initialEstimation;
     private int hoursSpent;
+    private String taskStatus;
+    private Boolean isDeleted;
     private ProjectResponseDTO project;
-    private TaskStatusResponseDTO taskStatus;
 }

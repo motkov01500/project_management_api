@@ -7,6 +7,8 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +38,7 @@ public abstract class BaseRepository<T> {
     }
 
     public void update(T entity) {
-        try{
+        try {
             EntityTransaction tx = entityManager.getTransaction();
             tx.begin();
             entityManager.merge(entity);
@@ -51,23 +53,16 @@ public abstract class BaseRepository<T> {
             EntityTransaction tx = entityManager.getTransaction();
             tx.begin();
             T entityToRemove = entityManager.find(entity, id);
-            if(entityToRemove != null) {
-                entityManager.remove(entityToRemove);
+            if (entityToRemove != null) {
+                Method isDeleted = entityToRemove.getClass()
+                        .getDeclaredMethod("setIsDeleted", Boolean.class);
+                isDeleted.invoke(entityToRemove, Boolean.TRUE);
             }
+            entityManager.merge(entityToRemove);
             tx.commit();
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public List<T> getEntityByCriteria(String query, Map<String, Object> parameters) {
-        Query resultQuery = entityManager.createQuery(query);
-        if (!parameters.isEmpty()) {
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                resultQuery.setParameter(entry.getKey(), entry.getValue());
-            }
-        }
-        return resultQuery.getResultList();
     }
 
     public TypedQuery<T> getEntityByCriteriaa(CriteriaQuery<T> query) {
