@@ -3,6 +3,6 @@
 2.Clone repo<br/>
 3.In the "project_management" directory, you must execute following commands in terminal:<br/>
 <pre>
-    3.1. docker build -t project_management .
-    3.2. docker compose up
+    1. docker build -t project_management .
+    2. docker compose up
 </pre>
