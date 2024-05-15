@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
+import org.cbg.projectmanagement.project_management.dto.project.UnAssignUserFromProject;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.service.ProjectService;
@@ -25,16 +26,41 @@ public class ProjectController {
     private ProjectMapper projectMapper;
 
     @GET
-    @Path("/administrator/get-all")
+    @Path("/administrator/get-all/{page}/{offset}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectService.findAll(page,offset)
+                        .stream()
+                        .map(projectMapper::mapProjectToProjectDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/administrator/get-all-without-paging")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
     public Response getAll() {
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.findAll()
+                .entity(projectService.findAllWithoutPaging()
                         .stream()
                         .map(projectMapper::mapProjectToProjectDTO)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/administrator/get-all-size")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response getAllSize() {
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectService.findAllSize())
                 .build();
     }
 
@@ -51,13 +77,13 @@ public class ProjectController {
     }
 
     @GET
-    @Path("/administrator/get-projects-without-users")
+    @Path("/get-projects-current-user/{page}/{offset}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("administrator")
-    public Response getUnassignedProjects() {
+    @RolesAllowed("user")
+    public Response getCurrentLoggedUserProjects(@PathParam("page")int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.findUnassignedProjects()
+                .entity(projectService.findCurrentUserProjects(page, offset)
                         .stream()
                         .map(projectMapper::mapProjectToProjectDTO)
                         .collect(Collectors.toList()))
@@ -65,16 +91,13 @@ public class ProjectController {
     }
 
     @GET
-    @Path("/get-projects-current-user")
+    @Path("/get-projects-current-user-size")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getCurrentLoggedUserProjects() {
+    public Response getCurrentLoggedUserProjectsSize() {
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.findCurrentUserProjects()
-                        .stream()
-                        .map(projectMapper::mapProjectToProjectDTO)
-                        .collect(Collectors.toList()))
+                .entity(projectService.findCurrentUserProjectsSize())
                 .build();
     }
 
@@ -126,6 +149,19 @@ public class ProjectController {
                 .status(Response.Status.OK)
                 .entity(projectService
                         .assignUserToProject(projectAssignUserDTO))
+                .build();
+    }
+
+    @PATCH
+    @Path("/administrator/remove-user-from-project")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response removeUserFromProject(UnAssignUserFromProject unAssignUserFromProject) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(projectService
+                        .removeUserFromProject(unAssignUserFromProject))
                 .build();
     }
 

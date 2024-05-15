@@ -7,16 +7,16 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
-import org.cbg.projectmanagement.project_management.entity.Project;
-import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.dto.project.*;
+import org.cbg.projectmanagement.project_management.dto.task.UnAssignUserToTaskDTO;
+import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
+import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class ProjectService {
@@ -33,17 +33,38 @@ public class ProjectService {
     @Inject
     private TaskService taskService;
 
+    @Inject
+    private ProjectMapper projectMapper;
+
     @Context
     private SecurityContext context;
 
-    public List<Project> findAll() {
-        return projectRepository
-                .findAll();
+    public List<Project> findAll(int page, int offset) {
+        List<Project> projects = projectRepository
+                .findAll(page, offset);
+        projects.forEach(project -> {
+            project.setIsUsersAvailable(userService.isUsersAvailableForAssignToProject(project.getKey()));
+            projectRepository.update(project);
+        });
+        return projects;
     }
 
-    public List<Project> findCurrentUserProjects() {
+    public List<Project> findAllWithoutPaging() {
+        return projectRepository.findAll(0, 0);
+    }
+
+    public int findAllSize() {
+        return projectRepository.findAll(0, 0).size();
+    }
+
+    public List<Project> findCurrentUserProjects(int pageNumber, int offside) {
         return projectRepository
-                .findProjectsRelatedToUser(context.getUserPrincipal().getName());
+                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), pageNumber, offside);
+    }
+
+    public int findCurrentUserProjectsSize() {
+        return projectRepository
+                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), 0, 0).size();
     }
 
     public Project findById(Long id) {
@@ -67,16 +88,22 @@ public class ProjectService {
                 .isUserInProject(projectKey, username);
     }
 
-    public List<Project> findUnassignedProjects() {
+    public List<Project> findUnassignedProjects(int pageNumber, int offset) {
         return projectRepository
-                .findUnassignedProjects();
+                .findUnassignedProjects(pageNumber, offset);
+    }
+
+    public int findUnassignedProjectsSize() {
+        return projectRepository
+                .findUnassignedProjects(0, 0)
+                .size();
     }
 
     @Transactional
     public Project create(ProjectCreateDTO projectCreateDTO) {
         Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle(),
                 Boolean.FALSE);
-        projectRepository.create(project);
+        projectRepository.save(project);
         return project;
     }
 
@@ -96,6 +123,33 @@ public class ProjectService {
     }
 
     @Transactional
+    public JsonObject removeUserFromProject(UnAssignUserFromProject unAssignUserFromProject) {
+        Project project = findByKey(unAssignUserFromProject.getProjectKey());
+        User user = userService.findUserById(unAssignUserFromProject.getUserId());
+        if (!(isUserInProject(project.getKey(), user.getUsername()))) {
+            throw new NotFoundResourceException("User is not assigned to current project");
+        }
+        project.setIsUsersAvailable(Boolean.TRUE);
+        List<Meeting> meetingsRelatedToProjectUsers = meetingService
+                .findMeetingsRelatedToUserAndProject(project.getKey(), user.getUsername());
+        List<Task> tasksRelatedToProjectUsers = taskService
+                .getTasksRelatedToUserAndProject(project.getKey(), user.getUsername());
+        meetingsRelatedToProjectUsers.forEach(meeting -> {
+            meeting.getUsers().remove(user);
+            meetingService.defaultUpdate(meeting.getId(), meeting);
+        });
+        tasksRelatedToProjectUsers.forEach(task -> {
+            task.getUsers().remove(user);
+            taskService.defaultUpdate(task.getId(), task);
+        });
+        project.getUsers().remove(user);
+        projectRepository.update(project);
+        return Json.createObjectBuilder()
+                .add("message", "User is successfully removed from project.")
+                .build();
+    }
+
+    @Transactional
     public JsonObject assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
         User currentUser = userService.findUserById(projectAssignUserDTO.getUserId());
         Project currentProject = findById(projectAssignUserDTO.getProjectId());
@@ -103,6 +157,8 @@ public class ProjectService {
             throw new UserAlreadyInProjectException("User already in current project");
         }
         currentProject.getUsers().add(currentUser);
+        projectRepository.update(currentProject);
+        currentProject.setIsUsersAvailable(userService.isUsersAvailableForAssignToProject(currentProject.getKey()));
         projectRepository.update(currentProject);
         return Json.createObjectBuilder()
                 .add("message", "User is successfully assigned to project.")
@@ -117,7 +173,7 @@ public class ProjectService {
     }
 
     private void validateDeletedProject(Project project) {
-        if(project.getIsDeleted()) {
+        if (project.getIsDeleted()) {
             throw new NotFoundResourceException("Project was not found.");
         }
     }

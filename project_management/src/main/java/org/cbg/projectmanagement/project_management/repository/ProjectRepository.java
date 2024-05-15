@@ -2,15 +2,12 @@ package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.*;
-import jakarta.persistence.metamodel.EntityType;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.Project_;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.entity.User_;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Stateless
@@ -27,10 +24,10 @@ public class ProjectRepository extends BaseRepository<Project> {
         Predicate findProjectByKey = criteriaBuilder.equal(projectRoot.get(Project_.key), projectKey);
         criteriaQuery.select(projectRoot)
                 .where(criteriaBuilder.and(findProjectByKey));
-        return Optional.ofNullable(getEntityByCriteriaa(criteriaQuery).getSingleResult());
+        return Optional.ofNullable(getEntityByCriteria(criteriaQuery).getSingleResult());
     }
 
-    public List<Project> findProjectsRelatedToUser(String username) {
+    public List<Project> findProjectsRelatedToUser(String username, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Project> query = getCriteriaQuery();
         Root<Project> projectRoot = query.from(Project.class);
@@ -39,24 +36,16 @@ public class ProjectRepository extends BaseRepository<Project> {
         Predicate relatedToUserProjects = criteriaBuilder.equal(projectUserJoin.get(User_.username), username);
         query.select(projectRoot)
                 .where(criteriaBuilder.and(relatedToUserProjects, notDeletedProjects));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
-    //TODO:findProjectsUserNotAddedIn
-//    public List<Project> findProjectsUserNotAddedIn(String username) {
-//        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-//        CriteriaQuery<Project> query = getCriteriaQuery();
-//        Root<Project> projectRoot = query.from(Project.class);
-//        Join<Project, User> projectUserJoin = projectRoot.join(Project_.users);
-//        Subquery<String> subquery = query.subquery(String.class);
-//        Root<Project> userSubRoot = subquery.from(Project.class);
-//        Join<Project, User> projectUserSubJoin = userSubRoot.join(Project_.users);
-//        subquery.select(projectUserSubJoin.get(User_.username));
-//        query.select(projectRoot)
-//                .where(criteriaBuilder.notEqual())
-//    }
-
-    public List<Project> findUnassignedProjects() {
+    public List<Project> findUnassignedProjects(int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Project> query = getCriteriaQuery();
         Root<Project> projectRoot = query.from(Project.class);
@@ -68,7 +57,13 @@ public class ProjectRepository extends BaseRepository<Project> {
         Predicate notDeletedProjects = criteriaBuilder.notEqual(projectRoot.get(Project_.isDeleted), true);
         query.select(projectRoot)
                 .where(criteriaBuilder.and(unassignedProjects, notDeletedProjects));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
     public boolean isUserInProject(String projectKey, String username) {
@@ -80,17 +75,23 @@ public class ProjectRepository extends BaseRepository<Project> {
         Predicate equalProjectKey = criteriaBuilder.equal(projectRoot.get(Project_.key), projectKey);
         query.select(projectRoot)
                 .where(criteriaBuilder.and(equalUsername, equalProjectKey));
-        return !(getEntityByCriteriaa(query)
+        return !(getEntityByCriteria(query)
                 .getResultList()
                 .isEmpty());
     }
 
-    public List<Project> findAll() {
+    public List<Project> findAll(int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Project> query = getCriteriaQuery();
         Root<Project> projectRoot = query.from(Project.class);
         query.select(projectRoot)
                 .where(criteriaBuilder.notEqual(projectRoot.get(Project_.isDeleted), true));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 }

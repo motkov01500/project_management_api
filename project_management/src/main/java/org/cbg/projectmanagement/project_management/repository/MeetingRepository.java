@@ -1,6 +1,7 @@
 package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.ejb.Stateless;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.cbg.projectmanagement.project_management.entity.*;
 
@@ -14,7 +15,7 @@ public class MeetingRepository extends BaseRepository<Meeting> {
         super(Meeting.class);
     }
 
-    public List<Meeting> getUpcomingMeetings(String key) {
+    public List<Meeting> getUpcomingMeetings(String key, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Meeting> query = getCriteriaQuery();
         Root<Meeting> meetingRoot = query.from(Meeting.class);
@@ -25,10 +26,17 @@ public class MeetingRepository extends BaseRepository<Meeting> {
         Predicate notDeletedMeetings = criteriaBuilder.notEqual(meetingRoot.get(Meeting_.isDeleted), true);
         query.select(meetingRoot)
                 .where(criteriaBuilder.and(equalKey, checkDateIsGreaterThanMeetingStarting, notDeletedMeetings));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query)
+                    .getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * 10)
+                .setMaxResults(10)
+                .getResultList();
     }
 
-    public List<Meeting> getCurrentUserMeetings(String username) {
+    public List<Meeting> getCurrentUserMeetings(String username, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Meeting> query = getCriteriaQuery();
         Root<Meeting> meetingRoot = query.from(Meeting.class);
@@ -37,29 +45,25 @@ public class MeetingRepository extends BaseRepository<Meeting> {
         Predicate notDeletedMeetings = criteriaBuilder.notEqual(meetingRoot.get(Meeting_.isDeleted), true);
         query.select(meetingRoot)
                 .where(criteriaBuilder.and(equalUsername, notDeletedMeetings));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
     public boolean isUserInMeeting(Long meetingId, Long userId) {
-        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-        CriteriaQuery<Meeting> query = getCriteriaQuery();
-        Root<Meeting> meetingRoot = query.from(Meeting.class);
-        Join<Meeting, User> meetingUserRoot = meetingRoot.join(Meeting_.users);
-        Predicate equalUsername = criteriaBuilder.equal(meetingUserRoot.get(User_.id), userId);
-        Predicate predicate = criteriaBuilder.notEqual(meetingUserRoot.get(User_.isDeleted), true);
-        query.select(meetingRoot)
-                .where(criteriaBuilder.and(equalUsername,predicate));
-        return !getEntityByCriteriaa(query).getResultList().isEmpty();
+        TypedQuery<Meeting> meetingTypedQuery = getEntityManager()
+                .createQuery("FROM Meeting M JOIN M.users U " +
+                        "WHERE U.id=:userId and M.id=:meetingId and M.isDeleted!=true", Meeting.class);
+        meetingTypedQuery.setParameter("userId",userId);
+        meetingTypedQuery.setParameter("meetingId",meetingId);
+        return !meetingTypedQuery.getResultList().isEmpty();
     }
-//
-//    public List<Meeting> findMeetingsToUserProjectsThatAreNotSigned(String username, String projectKey) {
-//        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-//        CriteriaQuery<Meeting> query = getCriteriaQuery();
-//        Root<Meeting> meetingRoot = query.from(Meeting.class);
-//        Join<Meeting, User> meetingUserJoin = meetingRoot.join(Meeting_.users);
-//    }
 
-    public List<Meeting> getMeetingsRelatedToProject(String key) {
+    public List<Meeting> getMeetingsRelatedToProjectWithPaging(String key, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Meeting> query = getCriteriaQuery();
         Root<Meeting> meetingRoot = query.from(Meeting.class);
@@ -68,10 +72,16 @@ public class MeetingRepository extends BaseRepository<Meeting> {
         Predicate relatedToProject = criteriaBuilder.equal(meetingProjectJoin.get(Project_.key), key);
         query.select(meetingRoot)
                 .where(criteriaBuilder.and(notDeletedMeetings, relatedToProject));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
-    public List<Meeting> getMeetingsRelatedToProjectAndUser(String username, String key) {
+    public List<Meeting> getMeetingsRelatedToProjectAndUser(String username, String key, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Meeting> query = getCriteriaQuery();
         Root<Meeting> meetingRoot = query.from(Meeting.class);
@@ -83,29 +93,32 @@ public class MeetingRepository extends BaseRepository<Meeting> {
         query.select(meetingRoot)
                 .where(criteriaBuilder.and(notDeletedMeetings, getMeetingsToCurrentProject
                         , getMeetingsToCurrentUser));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
-    public List<Meeting> findAll() {
-        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-        CriteriaQuery<Meeting> query = getCriteriaQuery();
-        Root<Meeting> meetingRoot = query.from(Meeting.class);
-        query.select(meetingRoot)
-                .where(criteriaBuilder.notEqual(meetingRoot.get(Meeting_.isDeleted), true));
-        return getEntityByCriteriaa(query).getResultList();
+    public List<Meeting> findAll(int pageNumber, int offset) {
+        TypedQuery<Meeting> meetingTypedQuery = getEntityManager()
+                .createQuery("FROM Meeting M WHERE M.isDeleted != true", Meeting.class);
+        if(pageNumber == 0 && offset == 0) {
+            return meetingTypedQuery.getResultList();
+        }
+        return meetingTypedQuery
+                .setFirstResult((pageNumber - 1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
+
     }
 
     public void deleteByProjectId(Long projectId) {
-        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-        CriteriaQuery<Meeting> query = getCriteriaQuery();
-        Root<Meeting> meetingRoot = query.from(Meeting.class);
-        Join<Meeting, Project> meetingProjectJoin = meetingRoot.join(Meeting_.project);
-        Predicate notDeletedMeetings = criteriaBuilder.notEqual(meetingRoot.get(Meeting_.isDeleted), true);
-        Predicate meetingsRelatedToProject = criteriaBuilder
-                .equal(meetingProjectJoin.get(Project_.id), projectId);
-        query.select(meetingRoot)
-                .where(criteriaBuilder.and(meetingsRelatedToProject, notDeletedMeetings));
-        List<Meeting> meetings = getEntityByCriteriaa(query).getResultList();
+        TypedQuery<Meeting> meetingTypedQuery = getEntityManager().createQuery("FROM Meeting M JOIN M.project P WHERE M.isDeleted != true and P.id=:projectId", Meeting.class);
+        meetingTypedQuery.setParameter("projectId", projectId);
+        List<Meeting> meetings = meetingTypedQuery.getResultList();
         meetings.forEach(meeting -> {
             meeting.setIsDeleted(Boolean.TRUE);
             update(meeting);

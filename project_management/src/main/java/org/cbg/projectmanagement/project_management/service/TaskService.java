@@ -7,10 +7,7 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
-import org.cbg.projectmanagement.project_management.dto.task.AssignUserToTaskDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateProgressDTO;
+import org.cbg.projectmanagement.project_management.dto.task.*;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.Task;
 import org.cbg.projectmanagement.project_management.entity.User;
@@ -37,18 +34,31 @@ public class TaskService {
     @Context
     private SecurityContext context;
 
-    public List<Task> findAll() {
-        return taskRepository
-                .findAll();
+    public List<Task> findAll(int page, int offset) {
+        List<Task> tasks = taskRepository
+                .findAll(page, offset);
+        return tasks;
     }
 
-    public List<Task> findAllRelatedToProject(String projectKey) {
-        List<Task> tasks = taskRepository.getAllTasksRelatedToProject(projectKey);
+    public int findAllSize() {
+        return taskRepository
+                .findAll(0,0)
+                .size();
+    }
+
+    public List<Task> findAllRelatedToProject(String projectKey, int page, int offside) {
+        List<Task> tasks = taskRepository.getAllTasksRelatedToProject(projectKey, page, offside);
         Project project = projectService.findByKey(projectKey);
-        if(tasks.isEmpty()) {
+        if (tasks.isEmpty()) {
             throw new NotFoundResourceException("Tasks are not found for current project.");
         }
-        return taskRepository.getAllTasksRelatedToProject(projectKey);
+        return tasks;
+    }
+
+    public int findAllRelatedToProjectSize(String projectKey) {
+        return taskRepository
+                .getAllTasksRelatedToProject(projectKey ,0,0)
+                .size();
     }
 
     public Task findById(Long id) {
@@ -62,19 +72,52 @@ public class TaskService {
     }
 
     @Transactional
-    public List<Task> getTasksRelatedToCurrentUserAndProject(String projectKey) {
+    public List<Task> getTasksRelatedToCurrentUserAndProject(String projectKey, int page, int offside) {
         Project project = projectService.findByKey(projectKey);
         return taskRepository
-                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey);
+                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, page, offside);
+    }
+
+    public int getTasksRelatedToCurrentUserAndProjectSize(String projectKey) {
+        return taskRepository
+                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey,0,0)
+                .size();
+    }
+
+    @Transactional
+    public List<Task> getTasksRelatedToUserAndProject(String projectKey, String username) {
+        Project project = projectService.findByKey(projectKey);
+        return taskRepository
+                .getTasksRelatedToCurrentUserAndProject(username, projectKey, 0, 0);
+    }
+
+    @Transactional
+    public JsonObject removeUserFromTask(UnAssignUserToTaskDTO unAssignUserToTaskDTO) {
+        Task task = findById(unAssignUserToTaskDTO.getTaskId());
+        User user = userService.findUserById(unAssignUserToTaskDTO.getUserId());
+        if (!(isUserInTask(unAssignUserToTaskDTO.getTaskId(), unAssignUserToTaskDTO.getUserId()))) {
+            throw new NotFoundResourceException("User is not part of task.");
+        }
+        task.setIsUsersAvailable(Boolean.TRUE);
+        task.getUsers().remove(user);
+        taskRepository.save(task);
+        return Json.createObjectBuilder()
+                .add("message", "User is successfully removed from task.")
+                .build();
     }
 
     @Transactional
     public JsonObject assignUserToTask(AssignUserToTaskDTO assignUserToTaskDTO) {
         User user = userService.getUserByUsername(assignUserToTaskDTO.getUsername());
         Task task = findById(assignUserToTaskDTO.getTaskId());
-        if(isTaskInProject(assignUserToTaskDTO.getUsername(),assignUserToTaskDTO.getTaskId())) {
+        List<User> users = userService.findUsersNotAssignedToTask(task.getId());
+        if (isTaskInProject(assignUserToTaskDTO.getUsername(), assignUserToTaskDTO.getTaskId())) {
             throw new UserAlreadyAssignedToTaskException("User Assignment Error: The user is already assigned to this task. Please select a different user or review the task assignment.");
         }
+        if (users.stream().count() == 1) {
+            task.setIsUsersAvailable(Boolean.FALSE);
+        }
+
         task.getUsers().add(user);
         taskRepository.update(task);
         return Json.createObjectBuilder()
@@ -87,8 +130,18 @@ public class TaskService {
         Project project = projectService.findById(taskCreateDTO.getProjectId());
         Task newTask = new Task(0,
                 taskCreateDTO.getInitialEstimation(), 0, project, TaskStatus.TODO.name(), Boolean.FALSE);
-        taskRepository.create(newTask);
+        if (taskCreateDTO.getTitle().isEmpty() || taskCreateDTO.getInitialEstimation() == 0) {
+            throw new ValidationException("You must enter the title, initial estimation and project.");
+        }
+        newTask.setTitle(taskCreateDTO.getTitle());
+        taskRepository.save(newTask);
         return newTask;
+    }
+
+    @Transactional
+    public boolean isUserInTask(Long taskId, Long userId) {
+        return taskRepository
+                .isUserInTask(userId, taskId);
     }
 
     @Transactional
@@ -99,7 +152,7 @@ public class TaskService {
         if (taskUpdateProgressDTO.getProgress() == 100) {
             currentTask.setTaskStatus(TaskStatus.DONE.name());
         }
-        if(taskUpdateProgressDTO.getProgress() > 0 && taskUpdateProgressDTO.getProgress() < 100) {
+        if (taskUpdateProgressDTO.getProgress() > 0 && taskUpdateProgressDTO.getProgress() < 100) {
             currentTask.setTaskStatus(TaskStatus.IN_PROGRESS.name());
         }
         taskRepository.update(currentTask);
@@ -114,8 +167,17 @@ public class TaskService {
         validateSpentHours(taskUpdateDTO.getHoursSpent(), currentTask.getHoursSpent(),
                 currentTask.getInitialEstimation());
         currentTask.setHoursSpent(taskUpdateDTO.getHoursSpent());
+        if (!(taskUpdateDTO.getTitle().isEmpty())) {
+            currentTask.setTitle(taskUpdateDTO.getTitle());
+        }
         taskRepository.update(currentTask);
         return currentTask;
+    }
+
+    public void defaultUpdate(Long id, Task newTask) {
+        Task currentTask = findById(id);
+        currentTask = newTask;
+        taskRepository.update(currentTask);
     }
 
     public void delete(Long id) {

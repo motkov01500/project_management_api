@@ -1,6 +1,7 @@
 package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.ejb.Stateless;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.cbg.projectmanagement.project_management.entity.*;
 
@@ -13,7 +14,7 @@ public class TaskRepository extends BaseRepository<Task> {
         super(Task.class);
     }
 
-    public List<Task> getAllTasksRelatedToProject(String projectKey) {
+    public List<Task> getAllTasksRelatedToProject(String projectKey, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Task> query = getCriteriaQuery();
         Root<Task> taskRoot = query.from(Task.class);
@@ -23,10 +24,25 @@ public class TaskRepository extends BaseRepository<Task> {
                 .equal(taskProjectJoin.get(Project_.key), projectKey);
         query.select(taskRoot)
                 .where(criteriaBuilder.and(notDeletedTasks,getTasksRelatedToCurrentProject));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
-    public List<Task> getTasksRelatedToCurrentUserAndProject(String username, String projectKey) {
+    public boolean isUserInTask(Long userId, Long taskId) {
+        TypedQuery<Meeting> meetingTypedQuery = getEntityManager()
+                .createQuery("FROM Task T JOIN T.users U " +
+                        "WHERE U.id=:userId AND T.id=:taskId AND T.isDeleted!=true", Meeting.class);
+        meetingTypedQuery.setParameter("userId",userId);
+        meetingTypedQuery.setParameter("taskId", taskId);
+        return !(meetingTypedQuery.getResultList().isEmpty());
+    }
+
+    public List<Task> getTasksRelatedToCurrentUserAndProject(String username, String projectKey, int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Task> query = getCriteriaQuery();
         Root<Task> taskRoot = query.from(Task.class);
@@ -40,8 +56,15 @@ public class TaskRepository extends BaseRepository<Task> {
         query.select(taskRoot)
                 .where(criteriaBuilder.and(getTasksRelatedToCurrentProject,
                         getTasksRelatedToCurrentUser, notDeletedTasks));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
+
 
     public boolean isUserAssignedAlreadyToTask(String username, Long taskId) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
@@ -52,18 +75,24 @@ public class TaskRepository extends BaseRepository<Task> {
         Predicate isTaskInUser = criteriaBuilder.equal(taskRoot.get(Task_.id), taskId);
         query.select(taskRoot)
                 .where(criteriaBuilder.and(isTaskInUser, isUserInTask));
-        return !(getEntityByCriteriaa(query)
+        return !(getEntityByCriteria(query)
                 .getResultList()
                 .isEmpty());
     }
 
-    public List<Task> findAll() {
+    public List<Task> findAll(int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Task> query = getCriteriaQuery();
         Root<Task> taskRoot = query.from(Task.class);
         query.select(taskRoot)
                 .where(criteriaBuilder.notEqual(taskRoot.get(Task_.isDeleted), true));
-        return getEntityByCriteriaa(query).getResultList();
+        if(pageNumber == 0 && offset == 0) {
+            return getEntityByCriteria(query).getResultList();
+        }
+        return getEntityByCriteria(query)
+                .setFirstResult((pageNumber-1) * offset)
+                .setMaxResults(offset)
+                .getResultList();
     }
 
     public void deleteByProjectId(Long projectId) {
@@ -75,7 +104,7 @@ public class TaskRepository extends BaseRepository<Task> {
         Predicate getTasksRelatedToProject = criteriaBuilder.equal(taskProjectJoin.get(Project_.id), projectId);
         query.select(taskRoot)
                 .where(criteriaBuilder.and(getTasksRelatedToProject, notDeletedTasks));
-        List<Task> tasks = getEntityByCriteriaa(query).getResultList();
+        List<Task> tasks = getEntityByCriteria(query).getResultList();
         tasks.forEach(task -> {
             task.setIsDeleted(true);
             update(task);

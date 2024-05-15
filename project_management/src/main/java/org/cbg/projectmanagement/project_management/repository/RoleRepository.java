@@ -22,6 +22,6 @@ public class RoleRepository extends BaseRepository<Role> {
         Root<Role> roleRoot = criteriaQuery.from(Role.class);
         criteriaQuery.select(roleRoot)
                 .where(criteriaBuilder.equal(roleRoot.get(Role_.name),name));
-        return Optional.of(getEntityByCriteriaa(criteriaQuery).getSingleResult());
+        return Optional.of(getEntityByCriteria(criteriaQuery).getSingleResult());
     }
 }

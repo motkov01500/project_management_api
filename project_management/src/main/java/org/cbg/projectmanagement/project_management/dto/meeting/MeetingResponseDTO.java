@@ -16,6 +16,7 @@ public class MeetingResponseDTO {
 
     private Long id;
     private LocalDateTime date;
+    private Boolean isUsersAvailable;
     private String title;
     private Boolean isDeleted;
     private ProjectResponseDTO project;

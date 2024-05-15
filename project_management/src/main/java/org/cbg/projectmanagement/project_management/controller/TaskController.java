@@ -5,10 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.cbg.projectmanagement.project_management.dto.task.AssignUserToTaskDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateDTO;
-import org.cbg.projectmanagement.project_management.dto.task.TaskUpdateProgressDTO;
+import org.cbg.projectmanagement.project_management.dto.task.*;
 import org.cbg.projectmanagement.project_management.mapper.TaskMapper;
 import org.cbg.projectmanagement.project_management.service.TaskService;
 
@@ -24,13 +21,13 @@ public class TaskController {
     private TaskMapper taskMapper;
 
     @GET
-    @Path("/administrator/get-all")
+    @Path("/administrator/get-all/{page}/{offset}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAll() {
+    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.findAll()
+                .entity(taskService.findAll(page, offset)
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
@@ -38,13 +35,24 @@ public class TaskController {
     }
 
     @GET
-    @Path("/administrator/get-all-related-to-project/{projectKey}")
+    @Path("/administrator/get-all-size")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAllRelatedToProject(@PathParam("projectKey") String projectKey) {
+    public Response getAllSize() {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.findAllRelatedToProject(projectKey)
+                .entity(taskService.findAllSize())
+                .build();
+    }
+
+    @GET
+    @Path("/administrator/get-all-related-to-project/{projectKey}/{page}/{offset}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response getAllRelatedToProject(@PathParam("projectKey") String projectKey, @PathParam("page") int page, @PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(taskService.findAllRelatedToProject(projectKey, page, offset)
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
@@ -52,16 +60,38 @@ public class TaskController {
     }
 
     @GET
-    @Path("/current-user-project-related/{projectKey}")
+    @Path("/administrator/get-all-related-to-project-size/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response getAllRelatedToProjectSize(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(taskService.findAllRelatedToProjectSize(projectKey))
+                .build();
+    }
+
+    @GET
+    @Path("/current-user-project-related/{projectKey}/{page}/{offset}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getUserRelated(@PathParam("projectKey") String projectKey) {
+    public Response getUserRelated(@PathParam("projectKey") String projectKey, @PathParam("page") int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.getTasksRelatedToCurrentUserAndProject(projectKey)
+                .entity(taskService.getTasksRelatedToCurrentUserAndProject(projectKey, page, offset)
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/current-user-project-related-size/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("user")
+    public Response getUserRelatedSize(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(taskService.getTasksRelatedToCurrentUserAndProjectSize(projectKey))
                 .build();
     }
 
@@ -125,6 +155,18 @@ public class TaskController {
         return Response
                 .status(Response.Status.OK)
                 .entity(taskService.assignUserToTask(assignUserToTaskDTO))
+                .build();
+    }
+
+    @PATCH
+    @Path("/administrator/remove-user-from-task")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response removeUserFromTask(UnAssignUserToTaskDTO unAssignUserToTaskDTO) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(taskService.removeUserFromTask(unAssignUserToTaskDTO))
                 .build();
     }
 

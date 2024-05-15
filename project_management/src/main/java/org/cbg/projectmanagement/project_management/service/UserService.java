@@ -2,26 +2,19 @@ package org.cbg.projectmanagement.project_management.service;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.json.Json;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.auth.RegisterDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserPasswordUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateImageDTO;
-import org.cbg.projectmanagement.project_management.entity.Meeting;
-import org.cbg.projectmanagement.project_management.entity.Project;
-import org.cbg.projectmanagement.project_management.entity.Role;
-import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.exception.*;
 import org.cbg.projectmanagement.project_management.repository.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,46 +32,126 @@ public class UserService {
     @Inject
     private MeetingService meetingService;
 
+    @Inject
+    private ProjectService projectService;
+
+    @Inject
+    private TaskService taskService;
+
     @Context
     private SecurityContext context;
 
-    public List<User> findAll() {
+    public List<User> findAll(int page, int offset) {
         return userRepository
-                .findAll()
+                .findAll(page, offset)
                 .stream()
                 .filter(user -> !user.getUsername().equals("admin"))
                 .collect(Collectors.toList());
     }
 
-    public List<User> getUsersRelatedToProject(String key) {
+    public int findAllSize() {
         return userRepository
-                .getUsersRelatedToProject(key);
+                .findAll(0, 0)
+                .size();
+    }
+
+    public List<User> getUsersRelatedToProject(String key, int page, int offset) {
+        return userRepository
+                .getUsersRelatedToProject(key, page, offset);
+    }
+
+    public int getUsersRelatedToProjectSize(String key) {
+        return userRepository
+                .getUsersRelatedToProject(key, 0, 0)
+                .size();
+    }
+
+    @Transactional
+    public List<User> findUsersNotAssignedToTask(Long taskId) {
+        Task currentTask = taskService.findById(taskId);
+        Project project = currentTask.getProject();
+        List<User> users = userRepository
+                .getUsersRelatedToProjectAndNotAddedToTask(taskId, project.getKey());
+        if (users.isEmpty()) {
+            currentTask.setIsUsersAvailable(Boolean.FALSE);
+        }
+        return users;
+    }
+
+    public List<User> findUsersRelatedToTask(Long taskId, int page, int offset) {
+        return userRepository
+                .getRelatedToTask(taskId, page, offset);
+    }
+
+    public int findUsersRelatedToTaskSize(Long taskId) {
+        return userRepository
+                .getRelatedToTask(taskId, 0, 0)
+                .size();
+    }
+
+    @Transactional
+    public boolean isUsersAvailableForAssignToTak(Long taskId) {
+        Task currentTask = taskService.findById(taskId);
+        Project project = currentTask.getProject();
+        List<User> users = userRepository
+                .getUsersRelatedToProjectAndNotAddedToTask(taskId, project.getKey());
+        return !users.isEmpty();
     }
 
     @Transactional
     public List<User> findUsersNotAssignedToMeeting(Long meetingId) {
         Meeting meeting = meetingService.findById(meetingId);
         Project project = meeting.getProject();
-        List<User> users = getUsersRelatedToProject(project.getKey())
-                .stream()
-                .filter(user -> !(meetingService.isUserAssignedToMeeting(meetingId, user.getId())))
-                .collect(Collectors.toList());
+        List<User> users = userRepository.getUsersRelatedToProjectAndNotAddedToMeeting(meetingId, project.getKey());
+        if (users.isEmpty()) {
+            meeting.setIsUsersAvailable(Boolean.FALSE);
+        }
         return users;
+    }
+
+    @Transactional
+    public boolean isUsersAvailableForAssignToMeeting(Long meetingId) {
+        Meeting meeting = meetingService.findById(meetingId);
+        Project project = meeting.getProject();
+        List<User> users = userRepository.getUsersRelatedToProjectAndNotAddedToMeeting(meetingId, project.getKey());
+        return !users.isEmpty();
+    }
+
+    @Transactional
+    public List<User> findUsersNotAssignedToProject(String projectKey) {
+        Project project = projectService.findByKey(projectKey);
+        List<User> users = userRepository.getUsersNotToProject(project.getKey());
+        if (users.isEmpty()) {
+            project.setIsUsersAvailable(Boolean.FALSE);
+        }
+        return users;
+    }
+
+    public boolean isUsersAvailableForAssignToProject(String projectKey) {
+        Project project = projectService.findByKey(projectKey);
+        List<User> users = userRepository.getUsersNotToProject(project.getKey());
+        return !users.isEmpty();
     }
 
     public User getCurrentUser() {
         return getUserByUsername(context.getUserPrincipal().getName());
     }
 
-    public List<User> getUsersRelatedToMeeting(Long meetingId) {
+    public List<User> getUsersRelatedToMeeting(Long meetingId, int page, int offset) {
         return userRepository
-                .getUsersRelatedToMeeting(meetingId);
+                .getUsersRelatedToMeeting(meetingId, page, offset);
+    }
+
+    public int getUsersRelatedToMeetingSize(Long meetingId) {
+        return userRepository
+                .getUsersRelatedToMeeting(meetingId, 0, 0)
+                .size();
     }
 
     public User getUserByUsername(String username) throws NotFoundResourceException {
         List<User> findedUser = userRepository
                 .getUserByUsername(username);
-        if(findedUser.isEmpty()) {
+        if (findedUser.isEmpty()) {
             throw new NotFoundResourceException("User was not found!");
         }
         return findedUser.get(0);
@@ -110,7 +183,7 @@ public class UserService {
         User user = new User(userCreateDTO.getUsername(), hashedPassword,
                 userCreateDTO.getFullName(), role, Boolean.FALSE);
         user.setImageUrl("https://www.idahoagc.org/sites/default/files/default_images/default-medium.png");
-        userRepository.create(user);
+        userRepository.save(user);
         return user;
     }
 
@@ -123,29 +196,34 @@ public class UserService {
         validatePassword(registerDTO.getPassword());
         user.setPassword(hashPassword(registerDTO.getPassword()));
         user.setRole(roleService.findRoleByName("user"));
-        if(registerDTO.getFullName().trim().isEmpty()) {
+        if (registerDTO.getFullName().trim().isEmpty()) {
             throw new ValidationException("You must enter the full name of user.");
         }
         user.setFullName(registerDTO.getFullName());
         user.setIsDeleted(false);
         user.setImageUrl("https://www.idahoagc.org/sites/default/files/default_images/default-medium.png");
-        userRepository.create(user);
+        userRepository.save(user);
         return user;
     }
 
     @Transactional
     public User uploadImageToCurrentUser(UserUpdateImageDTO userUpdateImageDTO) {
         User currentUser = getUserByUsername(context.getUserPrincipal().getName());
-        if(userUpdateImageDTO.getSize() > 2000000) {
+        if (userUpdateImageDTO.getSize() > 2000000) {
             throw new ImageSizeIsTooBigException("The image size is too big(maximum 2mb).");
         }
-        if(!(userUpdateImageDTO.getFileType().equals("image/jpg")) && !(userUpdateImageDTO.getFileType().contains("image/png"))
-        && !(userUpdateImageDTO.getFileType().equals("image/jpeg"))) {
+        if (!(userUpdateImageDTO.getFileType().equals("image/jpg")) && !(userUpdateImageDTO.getFileType().contains("image/png"))
+                && !(userUpdateImageDTO.getFileType().equals("image/jpeg"))) {
             throw new ImageFileTypeException("Wrong file type. Must be one of: jpg, png.");
         }
         currentUser.setImageUrl(userUpdateImageDTO.getImageUrl());
         userRepository.update(currentUser);
         return currentUser;
+    }
+
+    public boolean isUserInMeeting(String username, Long meetingId) {
+        return userRepository
+                .isUserInMeeting(username, meetingId);
     }
 
     public User updatePassword(Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
@@ -155,7 +233,7 @@ public class UserService {
                     "Please enter the correct old password to proceed.");
         }
         validatePassword(userPasswordUpdateDTO.getNewPassword());
-        if(!userPasswordUpdateDTO.getNewPassword().equals(userPasswordUpdateDTO.getConfirmedNewPassword())) {
+        if (!userPasswordUpdateDTO.getNewPassword().equals(userPasswordUpdateDTO.getConfirmedNewPassword())) {
             throw new ValidationException("The 'Confirm New Password' does not match the 'New Password'." +
                     " Please re-enter to confirm your new password. ");
         }
@@ -198,6 +276,14 @@ public class UserService {
         userRepository.update(user);
         return user;
     }
+
+    public User defaultUpdateUser(Long id, User newUser) {
+        User user = findUserById(id);
+        user = newUser;
+        userRepository.update(user);
+        return newUser;
+    }
+
 
     public void deleteUserById(Long id) {
         User user = findUserById(id);

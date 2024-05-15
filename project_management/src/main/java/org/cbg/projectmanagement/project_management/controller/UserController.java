@@ -3,6 +3,7 @@ package org.cbg.projectmanagement.project_management.controller;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.json.Json;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -30,12 +31,12 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/administrator/get-all")
+    @Path("/administrator/get-all/{page}/{offset}")
     @RolesAllowed("administrator")
-    public Response getAll() {
+    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.findAll()
+                .entity(userService.findAll(page, offset)
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
@@ -44,12 +45,89 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/get-all-size")
+    @RolesAllowed("administrator")
+    public Response getAllSize() {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.findAllSize())
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/get-users-can-add-to-task/{taskId}")
+    @RolesAllowed("administrator")
+    public Response getUsersCanAddToTask(@PathParam("taskId") Long taskId) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.findUsersNotAssignedToTask(taskId)
+                        .stream()
+                        .map(userMapper::userToUserResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/is-user-can-assign-to-project/{projectKey}")
+    @RolesAllowed("administrator")
+    public Response isUserCanAssignToProject(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(Json.createObjectBuilder()
+                        .add("isUsersAvailable",userService.isUsersAvailableForAssignToProject(projectKey))
+                        .build())
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/is-user-can-assign-to-task/{taskId}")
+    @RolesAllowed("administrator")
+    public Response isUserCanAssignToProject(@PathParam("taskId") Long taskId) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(Json.createObjectBuilder()
+                        .add("isUsersAvailable",userService.isUsersAvailableForAssignToTak(taskId))
+                        .build())
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/is-user-can-assign-to-meeting/{meetingId}")
+    @RolesAllowed("administrator")
+    public Response isUserCanAssignToMeeting(@PathParam("meetingId") Long meetingId) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(Json.createObjectBuilder()
+                        .add("isUsersAvailable",userService.isUsersAvailableForAssignToMeeting(meetingId))
+                        .build())
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/administrator/find-not-assigned-to-meeting-users/{meetingId}")
     @RolesAllowed("administrator")
-    public Response getNotAssignedToMeeting(@PathParam("meetingId") Long meetingId){
+    public Response getNotAssignedToMeeting(@PathParam("meetingId") Long meetingId) {
         return Response
                 .status(Response.Status.OK)
                 .entity(userService.findUsersNotAssignedToMeeting(meetingId)
+                        .stream().map(userMapper::userToUserResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/administrator/find-not-assigned-to-project-users/{projectKey}")
+    @RolesAllowed("administrator")
+    public Response getNotAssignedToProject(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.findUsersNotAssignedToProject(projectKey)
                         .stream().map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
                 .build();
@@ -84,15 +162,26 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/get-all-related-to-project/{key}")
+    @Path("/get-all-related-to-project/{key}/{page}/{offset}")
+    @RolesAllowed({"user", "administrator"})
+    public Response getUsersRelatedToProject(@PathParam("key") String key, @PathParam("page") int page,@PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.getUsersRelatedToProject(key, page, offset)
+                        .stream()
+                        .map(userMapper::userToUserResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get-all-related-to-project-size/{key}")
     @RolesAllowed({"user", "administrator"})
     public Response getUsersRelatedToProject(@PathParam("key") String key) {
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.getUsersRelatedToProject(key)
-                        .stream()
-                        .map(userMapper::userToUserResponseDTO)
-                        .collect(Collectors.toList()))
+                .entity(userService.getUsersRelatedToProjectSize(key))
                 .build();
     }
 
@@ -111,15 +200,53 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/get-all-related-to-meeting/{meetingId}")
-    @RolesAllowed("user")
-    public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id) {
+    @Path("/get-all-related-to-meeting/{meetingId}/{page}/{offset}")
+    @RolesAllowed({"user", "administrator"})
+    public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id, @PathParam("page") int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.getUsersRelatedToMeeting(id)
+                .entity(userService.getUsersRelatedToMeeting(id, page, offset)
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get-all-related-to-meeting-size/{meetingId}")
+    @RolesAllowed({"user", "administrator"})
+    public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService.getUsersRelatedToMeetingSize(id))
+                .build();
+    }
+
+    @GET
+    @Path("/get-all-related-to-task/{taskId}/{page}/{offset}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"administrator", "user"})
+    public Response getAllRelatedToTask(@PathParam("taskId") Long taskId, @PathParam("page") int page,@PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService
+                        .findUsersRelatedToTask(taskId, page, offset)
+                        .stream()
+                        .map(userMapper::userToUserResponseDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/get-all-related-to-task-size/{taskId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"administrator", "user"})
+    public Response getAllRelatedToTask(@PathParam("taskId") Long taskId) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(userService
+                        .findUsersRelatedToTaskSize(taskId))
                 .build();
     }
 

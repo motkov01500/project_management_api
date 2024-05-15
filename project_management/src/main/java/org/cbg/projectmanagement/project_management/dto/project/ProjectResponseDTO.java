@@ -15,4 +15,5 @@ public class ProjectResponseDTO {
     private String key;
     private String title;
     private Boolean isDeleted;
+    private Boolean isUsersAvailable;
 }

@@ -10,6 +10,7 @@ import org.cbg.projectmanagement.project_management.enums.TaskStatus;
 @EqualsAndHashCode
 public class TaskUpdateDTO {
 
+    private String title;
     private int progress;
     private int hoursSpent;
 }

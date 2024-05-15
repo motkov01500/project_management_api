@@ -3,20 +3,18 @@ package org.cbg.projectmanagement.project_management.repository;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.Metamodel;
+import lombok.Getter;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public abstract class BaseRepository<T> {
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("persistence");
 
+    @Getter
     @PersistenceContext
     private EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -26,11 +24,13 @@ public abstract class BaseRepository<T> {
         this.entity = entity;
     }
 
-    public void create(T entity) {
+    public void save(T entity) {
         try {
             EntityTransaction tx = entityManager.getTransaction();
             tx.begin();
             entityManager.persist(entity);
+            entityManager.flush();
+            entityManager.refresh(entity);
             tx.commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,6 +42,7 @@ public abstract class BaseRepository<T> {
             EntityTransaction tx = entityManager.getTransaction();
             tx.begin();
             entityManager.merge(entity);
+            entityManager.flush();
             tx.commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,7 +66,7 @@ public abstract class BaseRepository<T> {
         }
     }
 
-    public TypedQuery<T> getEntityByCriteriaa(CriteriaQuery<T> query) {
+    public TypedQuery<T> getEntityByCriteria(CriteriaQuery<T> query) {
         return entityManager.createQuery(query);
     }
 

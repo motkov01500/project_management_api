@@ -10,6 +10,7 @@ import org.cbg.projectmanagement.project_management.enums.TaskStatus;
 @EqualsAndHashCode
 public class TaskCreateDTO {
 
+    private String title;
     private int initialEstimation;
     private Long projectId;
 }

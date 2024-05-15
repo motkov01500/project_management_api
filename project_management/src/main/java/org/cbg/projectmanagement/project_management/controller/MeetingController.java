@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUnAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.service.MeetingService;
@@ -23,13 +24,13 @@ public class MeetingController {
     private MeetingMapper meetingMapper;
 
     @GET
-    @Path("/administrator/get-all")
+    @Path("/administrator/get-all/{pageNumber}/{offset}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAll() {
+    public Response getAll(@PathParam("pageNumber") int pageNumber, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findAll()
+                .entity(meetingService.findAll(pageNumber, offset)
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
@@ -37,25 +38,47 @@ public class MeetingController {
     }
 
     @GET
-    @Path("/get-current-user-meetings/{projectKey}")
+    @Path("/get-all-size")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"administrator", "user"})
-    public Response getCurrentUserRelatedMeetings(@PathParam("projectKey") String projectKey) {
+    @RolesAllowed({"user", "administrator"})
+    public Response getAllSize() {
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProject(projectKey)
+                .entity(meetingService.findAllSize())
+                .build();
+    }
+
+    @GET
+    @Path("/get-current-user-meetings/{projectKey}/{pageNumber}/{offset}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"administrator", "user"})
+    public Response getCurrentUserRelatedMeetings(@PathParam("projectKey") String projectKey, @PathParam("pageNumber") int page, @PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProject(projectKey, page, offset)
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    @GET
+    @Path("/get-current-user-meetings-size/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"administrator", "user"})
+    public Response getCurrentUserRelatedMeetingsSize(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProjectSize(projectKey))
                 .build();
     }
 
     @GET
     @Path("/administrator/get-by-id/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("administrator")
+    @RolesAllowed({"user","administrator"})
     public Response getById(@PathParam("id") Long id) {
-        return  Response
+        return Response
                 .status(Response.Status.OK)
                 .entity(meetingMapper
                         .mapMeetingToMeetingDTO(meetingService.findById(id)))
@@ -63,28 +86,13 @@ public class MeetingController {
     }
 
     @GET
-    @Path("/get-unfinished/{key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"user","administrator"})
-    public Response getUnfinishedMeetings(@PathParam("key")String key) {
-        return Response
-                .status(Response.Status.OK)
-                .entity(meetingService.getUnfinishedMeetings(key)
-                        .stream()
-                        .map(meetingMapper::mapMeetingToMeetingDTO)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    //TODO:OPTIONAL*-present all user meetings in calendar view
-    @GET
-    @Path("/get-all-related-meetings")
+    @Path("/get-all-related-meetings/{page}/{offset}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getUserRelatedMeetings() {
+    public Response getUserRelatedMeetings(@PathParam("page") int page, @PathParam("offset") int offset) {
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.getAllMeetingsToCurrentUser()
+                .entity(meetingService.getAllMeetingsToCurrentUser(page, offset)
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
@@ -92,19 +100,41 @@ public class MeetingController {
     }
 
     @GET
-    @Path("/get-all-related-to-project/{projectKey}")
+    @Path("/get-all-related-meetings-size")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"user","administrator"})
-    public Response getProjectRelatedMeetings(@PathParam("projectKey") String key) {
+    @RolesAllowed("user")
+    public Response getUserRelatedMeetingsSize() {
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findMeetingRelatedToProject(key)
+                .entity(meetingService.getAllMeetingsToCurrentUserSize())
+                .build();
+    }
+
+    @GET
+    @Path("/get-all-related-to-project/{projectKey}/{page}/{offset}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"user", "administrator"})
+    public Response getProjectRelatedMeetings(@PathParam("projectKey") String key, @PathParam("page") int page, @PathParam("offset") int offset) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingRelatedToProject(key, page, offset)
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
                 .build();
     }
 
+
+    @GET
+    @Path("/get-all-related-to-project-size/{projectKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"user", "administrator"})
+    public Response getRelatedToProjectSize(@PathParam("projectKey") String projectKey) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.findMeetingRelatedToProjectSize(projectKey))
+                .build();
+    }
 
     @POST
     @Path("/administrator/create")
@@ -124,7 +154,7 @@ public class MeetingController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response updateDate(@PathParam("id")Long id, MeetingUpdateDTO meetingUpdateDTO) {
+    public Response updateDate(@PathParam("id") Long id, MeetingUpdateDTO meetingUpdateDTO) {
         return Response
                 .status(Response.Status.OK)
                 .entity(meetingMapper
@@ -141,6 +171,18 @@ public class MeetingController {
         return Response
                 .status(Response.Status.OK)
                 .entity(meetingService.addUserToMeeting(meetingAssignUserDTO))
+                .build();
+    }
+
+    @PATCH
+    @Path("/administrator/remove-user-from-meeting")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("administrator")
+    public Response removeUserFromMeeting(MeetingUnAssignUserDTO meetingUnAssignUserDTO) {
+        return Response
+                .status(Response.Status.OK)
+                .entity(meetingService.removeUserFromMeeting(meetingUnAssignUserDTO))
                 .build();
     }
 

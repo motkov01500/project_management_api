@@ -13,8 +13,10 @@ import org.cbg.projectmanagement.project_management.dto.project.ProjectResponseD
 public class TaskResponseDTO {
 
     private int id;
+    private String title;
     private int progress;
     private int initialEstimation;
+    private Boolean isUsersAvailable;
     private int hoursSpent;
     private String taskStatus;
     private Boolean isDeleted;

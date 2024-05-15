@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -15,7 +17,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Meeting {
+public class Meeting implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meeting_generator")
@@ -32,6 +34,9 @@ public class Meeting {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
+    @Column(name = "is_user_available_to_add")
+    private Boolean isUsersAvailable;
+
     @Column(name = "duration")
     private int duration;
 
@@ -39,11 +44,11 @@ public class Meeting {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToMany(cascade = CascadeType.REMOVE)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, targetEntity = User.class)
     @JoinTable(name = "user_meeting",
             joinColumns = {@JoinColumn(name = "meeting_id")},
             inverseJoinColumns = {@JoinColumn(name = "userr_id")})
-    private Set<User> users;
+    private List<User> users;
 
     public Meeting(LocalDateTime date, String title, Project project, Boolean isDeleted) {
         this.date = date;
