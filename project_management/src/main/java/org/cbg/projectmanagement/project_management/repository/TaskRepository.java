@@ -65,6 +65,16 @@ public class TaskRepository extends BaseRepository<Task> {
                 .getResultList();
     }
 
+    public List<Task> getTasksRelatedToUser(String username) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<Task> query = getCriteriaQuery();
+        Root<Task> taskRoot = query.from(Task.class);
+        Join<Task, User> taskUserJoin = taskRoot.join(Task_.users);
+        query.select(taskRoot)
+                .where(criteriaBuilder.equal(taskUserJoin.get(User_.username),username));
+        return getEntityByCriteria(query).getResultList();
+    }
+
 
     public boolean isUserAssignedAlreadyToTask(String username, Long taskId) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();

@@ -280,7 +280,7 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/upload-image")
-    @RolesAllowed("user")
+    @RolesAllowed({"administrator","user"})
     public Response uploadImageToCurrentUser(UserUpdateImageDTO userUpdateImageDTO) {
         return Response
                 .status(Response.Status.OK)
@@ -294,7 +294,7 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/update-password/{id}")
-    @RolesAllowed("user")
+    @RolesAllowed({"administrator","user"})
     public Response updatePassword(@PathParam("id") Long id, UserPasswordUpdateDTO userPasswordUpdateDTO) {
         return Response
                 .status(Response.Status.OK)

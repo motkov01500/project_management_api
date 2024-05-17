@@ -28,9 +28,6 @@ public class Project implements Serializable {
     @Column(name = "id", nullable = false, unique = true)
     private Long id;
 
-    @Column(name = "is_user_available_to_add")
-    private Boolean isUsersAvailable;
-
     @Column(name = "key", unique = true, nullable = false)
     private String key;
 

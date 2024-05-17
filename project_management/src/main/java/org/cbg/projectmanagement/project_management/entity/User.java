@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,14 +44,14 @@ public class User implements Serializable {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @ManyToMany(mappedBy = "users")
-    private Set<Project> projects;
+    @ManyToMany(mappedBy = "users", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Project> projects;
 
-    @ManyToMany(mappedBy = "users")
-    private Set<Meeting> meetings;
+    @ManyToMany(mappedBy = "users", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Meeting> meetings;
 
-    @ManyToMany(mappedBy = "users")
-    private Set<Task> tasks;
+    @ManyToMany(mappedBy = "users", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Task> tasks;
 
     public User(String username, String password, String fullName, Role role, Boolean isDeleted) {
         this.username = username;

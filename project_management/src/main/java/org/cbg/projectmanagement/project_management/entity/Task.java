@@ -32,9 +32,6 @@ public class Task implements Serializable {
     @Column(name = "progress")
     private int progress;
 
-    @Column(name = "is_user_available_to_add")
-    private Boolean isUsersAvailable;
-
     @Column(name = "task_status")
     private String taskStatus;
 

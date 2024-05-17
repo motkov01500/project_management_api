@@ -73,7 +73,7 @@ public class UserService {
         List<User> users = userRepository
                 .getUsersRelatedToProjectAndNotAddedToTask(taskId, project.getKey());
         if (users.isEmpty()) {
-            currentTask.setIsUsersAvailable(Boolean.FALSE);
+            throw new NotFoundResourceException("Users are not available.");
         }
         return users;
     }
@@ -87,6 +87,10 @@ public class UserService {
         return userRepository
                 .getRelatedToTask(taskId, 0, 0)
                 .size();
+    }
+
+    public boolean isUserExists(String username) {
+        return userRepository.isUserExists(username);
     }
 
     @Transactional
@@ -104,7 +108,7 @@ public class UserService {
         Project project = meeting.getProject();
         List<User> users = userRepository.getUsersRelatedToProjectAndNotAddedToMeeting(meetingId, project.getKey());
         if (users.isEmpty()) {
-            meeting.setIsUsersAvailable(Boolean.FALSE);
+            throw new NotFoundResourceException("Users are not available.");
         }
         return users;
     }
@@ -122,7 +126,7 @@ public class UserService {
         Project project = projectService.findByKey(projectKey);
         List<User> users = userRepository.getUsersNotToProject(project.getKey());
         if (users.isEmpty()) {
-            project.setIsUsersAvailable(Boolean.FALSE);
+            throw new NotFoundResourceException("Users are not available.");
         }
         return users;
     }
@@ -237,7 +241,7 @@ public class UserService {
             throw new ValidationException("The 'Confirm New Password' does not match the 'New Password'." +
                     " Please re-enter to confirm your new password. ");
         }
-        user.setPassword(userPasswordUpdateDTO.getNewPassword());
+        user.setPassword(hashPassword(userPasswordUpdateDTO.getNewPassword()));
         userRepository.update(user);
         return user;
     }
@@ -284,12 +288,17 @@ public class UserService {
         return newUser;
     }
 
-
+    @Transactional
     public void deleteUserById(Long id) {
         User user = findUserById(id);
         if (user.getUsername().equals("admin")) {
             throw new DeleteAdminUserException("Admin user can't be deleted from system.");
         }
+        meetingService.deleteByUsername(user.getUsername());
+        projectService.deletedProjectsByUsername(user.getUsername());
+        taskService.deleteTasksToUser(user.getUsername());
+        //TODO:like 300row for projects and tasks
+        userRepository.save(user);
         userRepository.delete(id);
     }
 

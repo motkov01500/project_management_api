@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "role", schema = "public")
@@ -22,4 +23,7 @@ public class Role{
 
     @Column(name = "name")
     private String name;
+
+    @OneToMany(mappedBy = "role")
+    private Set<User> user;
 }

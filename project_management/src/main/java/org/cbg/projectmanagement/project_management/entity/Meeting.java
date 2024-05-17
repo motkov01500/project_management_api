@@ -34,9 +34,6 @@ public class Meeting implements Serializable {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
-    @Column(name = "is_user_available_to_add")
-    private Boolean isUsersAvailable;
-
     @Column(name = "duration")
     private int duration;
 

@@ -7,9 +7,11 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
-import org.cbg.projectmanagement.project_management.dto.meeting.*;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingAssignUserDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUnAssignUserDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.entity.Meeting;
-import org.cbg.projectmanagement.project_management.entity.PaginatedEntity;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.exception.MeetingOutdatedException;
@@ -20,8 +22,8 @@ import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.repository.MeetingRepository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Stateless
 public class MeetingService {
@@ -44,10 +46,6 @@ public class MeetingService {
     public List<Meeting> findAll(int pageNumber, int offsite) {
         List<Meeting> meetings = meetingRepository
                 .findAll(pageNumber, offsite);
-        meetings.forEach(meeting -> {
-            meeting.setIsUsersAvailable(userService.isUsersAvailableForAssignToMeeting(meeting.getId()));
-            meetingRepository.update(meeting);
-        });
         return meetings;
     }
 
@@ -129,14 +127,13 @@ public class MeetingService {
 
     public Meeting update(Long id, MeetingUpdateDTO meetingUpdateDTO) {
         Meeting updatedMeeting = findById(id);
-        if (meetingUpdateDTO.getDate() != null) {
-            updatedMeeting.setDate(meetingUpdateDTO.getDate());
+        if (!meetingUpdateDTO.getDate().isEmpty()) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+            LocalDateTime localDateTime = LocalDateTime.parse(meetingUpdateDTO.getDate(),dateTimeFormatter);
+            updatedMeeting.setDate(localDateTime);
         }
-        if (meetingUpdateDTO.getTitle() != null) {
+        if (!meetingUpdateDTO.getTitle().isEmpty()) {
             updatedMeeting.setTitle(meetingUpdateDTO.getTitle());
-        }
-        if (meetingUpdateDTO.getDate() != null && meetingUpdateDTO.getTitle() != null) {
-            throw new ValidationException("All values are empty.");
         }
         meetingRepository
                 .update(updatedMeeting);
@@ -156,7 +153,6 @@ public class MeetingService {
         if (!(userService.isUserInMeeting(user.getUsername(), meeting.getId()))) {
             throw new UserIsAlreadyAssignedToMeetingException("User is not part of current meeting.");
         }
-        meeting.setIsUsersAvailable(Boolean.TRUE);
         meeting.getUsers().remove(user);
         meetingRepository.save(meeting);
         return Json.createObjectBuilder()
@@ -175,9 +171,6 @@ public class MeetingService {
         if (meeting.getDate().isBefore(LocalDateTime.now())) {
             throw new MeetingOutdatedException("Meeting is outdated.");
         }
-        if (users.stream().count() == 1) {
-            meeting.setIsUsersAvailable(Boolean.FALSE);
-        }
         meeting.getUsers().add(userToAssign);
         return Json.createObjectBuilder()
                 .add("message", "User is added to meeting!")
@@ -186,8 +179,19 @@ public class MeetingService {
 
     @Transactional
     public void delete(Long id) {
+        Meeting currentMeeting = findById(id);
+        currentMeeting.getUsers().clear();
+        meetingRepository.save(currentMeeting);
         meetingRepository
                 .delete(id);
+    }
+
+    public void deleteByUsername(String username) {
+        List<Meeting> meetings = meetingRepository.findAllByUsername(username);
+        meetings.forEach(meeting -> {
+            meeting.getUsers().clear();
+            meetingRepository.save(meeting);
+        });
     }
 
     public void deleteRelatedToProjectMeetings(Long projectId) {

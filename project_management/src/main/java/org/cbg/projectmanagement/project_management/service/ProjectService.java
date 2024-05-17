@@ -11,6 +11,7 @@ import org.cbg.projectmanagement.project_management.dto.project.*;
 import org.cbg.projectmanagement.project_management.dto.task.UnAssignUserToTaskDTO;
 import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
+import org.cbg.projectmanagement.project_management.exception.ProjectAlreadyExistsException;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
@@ -42,10 +43,6 @@ public class ProjectService {
     public List<Project> findAll(int page, int offset) {
         List<Project> projects = projectRepository
                 .findAll(page, offset);
-        projects.forEach(project -> {
-            project.setIsUsersAvailable(userService.isUsersAvailableForAssignToProject(project.getKey()));
-            projectRepository.update(project);
-        });
         return projects;
     }
 
@@ -103,6 +100,9 @@ public class ProjectService {
     public Project create(ProjectCreateDTO projectCreateDTO) {
         Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle(),
                 Boolean.FALSE);
+        if(projectRepository.isProjectExists(projectCreateDTO.getKey())) {
+            throw new ProjectAlreadyExistsException("Project with this key already exists.");
+        }
         projectRepository.save(project);
         return project;
     }
@@ -110,6 +110,9 @@ public class ProjectService {
     @Transactional
     public Project update(Long id, ProjectUpdateDTO projectUpdateDTO) {
         Project project = findById(id);
+        if(projectRepository.isProjectExists(projectUpdateDTO.getKey())) {
+            throw new ProjectAlreadyExistsException("Project with this key already exists");
+        }
         if (!projectUpdateDTO.getKey().isEmpty() && !(projectUpdateDTO.getKey().equals(project.getKey()))) {
             project.setKey(projectUpdateDTO.getKey());
         }
@@ -129,7 +132,6 @@ public class ProjectService {
         if (!(isUserInProject(project.getKey(), user.getUsername()))) {
             throw new NotFoundResourceException("User is not assigned to current project");
         }
-        project.setIsUsersAvailable(Boolean.TRUE);
         List<Meeting> meetingsRelatedToProjectUsers = meetingService
                 .findMeetingsRelatedToUserAndProject(project.getKey(), user.getUsername());
         List<Task> tasksRelatedToProjectUsers = taskService
@@ -158,7 +160,6 @@ public class ProjectService {
         }
         currentProject.getUsers().add(currentUser);
         projectRepository.update(currentProject);
-        currentProject.setIsUsersAvailable(userService.isUsersAvailableForAssignToProject(currentProject.getKey()));
         projectRepository.update(currentProject);
         return Json.createObjectBuilder()
                 .add("message", "User is successfully assigned to project.")
@@ -170,6 +171,14 @@ public class ProjectService {
         meetingService.deleteRelatedToProjectMeetings(id);
         taskService.deleteRelatedToProjectTasks(id);
         projectRepository.delete(id);
+    }
+
+    public void deletedProjectsByUsername(String username) {
+        List<Project> projects = projectRepository.findProjectsRelatedToUser(username,0,0);
+        projects.forEach(project -> {
+            project.getUsers().clear();
+            projectRepository.save(project);
+        });
     }
 
     private void validateDeletedProject(Project project) {

@@ -80,6 +80,16 @@ public class ProjectRepository extends BaseRepository<Project> {
                 .isEmpty());
     }
 
+    public boolean isProjectExists(String projectKey) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<Project> query = getCriteriaQuery();
+        Root<Project> projectRoot = query.from(Project.class);
+        Predicate equalProjectKey = criteriaBuilder.equal(projectRoot.get(Project_.key), projectKey);
+        query.select(projectRoot)
+                .where(criteriaBuilder.and(equalProjectKey));
+        return !getEntityByCriteria(query).getResultList().isEmpty();
+    }
+
     public List<Project> findAll(int pageNumber, int offset) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Project> query = getCriteriaQuery();

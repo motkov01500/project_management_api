@@ -9,6 +9,8 @@ import org.cbg.projectmanagement.project_management.entity.Role;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.repository.RoleRepository;
 
+import java.util.List;
+
 @Stateless
 public class RoleService {
 
@@ -19,5 +21,10 @@ public class RoleService {
         return roleRepository
                 .getRoleByName(name)
                 .orElseThrow(() -> new NotFoundResourceException("Role was not found"));
+    }
+
+    public Role findRolesByUsername(String username) {
+        return roleRepository
+                .getRolesByUsername(username);
     }
 }

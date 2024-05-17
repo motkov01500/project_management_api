@@ -112,7 +112,16 @@ public class MeetingRepository extends BaseRepository<Meeting> {
                 .setFirstResult((pageNumber - 1) * offset)
                 .setMaxResults(offset)
                 .getResultList();
+    }
 
+    public List<Meeting> findAllByUsername(String username) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<Meeting> query = getCriteriaQuery();
+        Root<Meeting> meetingRoot = query.from(Meeting.class);
+        Join<Meeting, User> meetingUserJoin = meetingRoot.join(Meeting_.users);
+        query.select(meetingRoot)
+                .where(criteriaBuilder.equal(meetingUserJoin.get(User_.username),username));
+        return getEntityByCriteria(query).getResultList();
     }
 
     public void deleteByProjectId(Long projectId) {

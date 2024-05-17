@@ -10,4 +10,5 @@ import lombok.Setter;
 public class TaskUpdateProgressDTO {
 
     private int progress;
+    private int hoursSpent;
 }

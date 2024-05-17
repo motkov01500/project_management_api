@@ -15,6 +15,7 @@ public class FlywayConfiguration implements ServletContextListener {
         try {
             Flyway flyway = Flyway.configure()
                     .dataSource("jdbc:postgresql://db:5432/projectmanagement","postgres","123")
+//                    .dataSource("jdbc:postgresql://localhost:5432/projectmanagement","postgres","123")
                     .baselineOnMigrate(true)
                     .locations("classpath:db/migration")
                     .load();

@@ -8,11 +8,10 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.service.RoleService;
 import org.cbg.projectmanagement.project_management.service.UserService;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -22,11 +21,15 @@ public class TokenProvider {
     @Inject
     private UserService userService;
 
-    public String createToken(String username, Set<String> authorities) {
+    @Inject
+    private RoleService roleService;
+
+    public String createToken(String username) {
         long now = new Date().getTime();
+        Set<String> authorities = Set.of(roleService.findRolesByUsername(username).getName());
         return Jwts.builder()
                 .setSubject(username)
-                .claim("auth", authorities.stream().collect(Collectors.joining("")))
+                .claim("auth", String.join("", authorities))
                 .signWith(SignatureAlgorithm.HS512, "my-secret")
                 .setExpiration(new Date(now + TimeUnit.MINUTES.toMillis(90)))
                 .compact();

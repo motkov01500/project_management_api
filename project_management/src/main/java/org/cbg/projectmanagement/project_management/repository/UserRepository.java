@@ -28,7 +28,7 @@ public class UserRepository extends BaseRepository<User> {
     public List<User> getUsersRelatedToProjectAndNotAddedToTask(Long taskId, String projectKey) {
         TypedQuery<User> userTypedQuery = getEntityManager()
                 .createQuery("FROM User U JOIN U.projects P JOIN P.taskSet T " +
-                        "WHERE P.key = :projectKey AND :taskId NOT IN (SELECT T2.id FROM User U2 JOIN U2.tasks T2 WHERE U2.id = U.id)", User.class);
+                        "WHERE P.key = :projectKey AND U.id NOT IN (SELECT U2.id FROM User U2 JOIN U2.tasks T2 WHERE U2.id = U.id AND T2.id=:taskId)", User.class);
         userTypedQuery.setParameter("projectKey", projectKey);
         userTypedQuery.setParameter("taskId", taskId);
         return userTypedQuery.getResultList();
@@ -45,8 +45,8 @@ public class UserRepository extends BaseRepository<User> {
 
     public List<User> getUsersNotToProject(String projectKey) {
         TypedQuery<User> userTypedQuery = getEntityManager()
-                .createQuery("FROM User U JOIN U.projects P " +
-                        "WHERE :projectKey NOT IN (SELECT P2.key FROM User U2 JOIN U2.projects P2 WHERE U2.id = U.id)", User.class);
+                .createQuery("FROM User U  " +
+                        "WHERE U.id NOT IN (SELECT U2.id FROM User U2 JOIN U2.projects P2 WHERE U2.id = U.id AND P2.key=:projectKey)", User.class);
         userTypedQuery.setParameter("projectKey", projectKey);
         return userTypedQuery.getResultList();
     }

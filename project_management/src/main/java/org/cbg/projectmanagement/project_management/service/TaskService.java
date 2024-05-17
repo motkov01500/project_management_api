@@ -42,7 +42,7 @@ public class TaskService {
 
     public int findAllSize() {
         return taskRepository
-                .findAll(0,0)
+                .findAll(0, 0)
                 .size();
     }
 
@@ -57,7 +57,7 @@ public class TaskService {
 
     public int findAllRelatedToProjectSize(String projectKey) {
         return taskRepository
-                .getAllTasksRelatedToProject(projectKey ,0,0)
+                .getAllTasksRelatedToProject(projectKey, 0, 0)
                 .size();
     }
 
@@ -80,7 +80,7 @@ public class TaskService {
 
     public int getTasksRelatedToCurrentUserAndProjectSize(String projectKey) {
         return taskRepository
-                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey,0,0)
+                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, 0, 0)
                 .size();
     }
 
@@ -98,7 +98,6 @@ public class TaskService {
         if (!(isUserInTask(unAssignUserToTaskDTO.getTaskId(), unAssignUserToTaskDTO.getUserId()))) {
             throw new NotFoundResourceException("User is not part of task.");
         }
-        task.setIsUsersAvailable(Boolean.TRUE);
         task.getUsers().remove(user);
         taskRepository.save(task);
         return Json.createObjectBuilder()
@@ -113,9 +112,6 @@ public class TaskService {
         List<User> users = userService.findUsersNotAssignedToTask(task.getId());
         if (isTaskInProject(assignUserToTaskDTO.getUsername(), assignUserToTaskDTO.getTaskId())) {
             throw new UserAlreadyAssignedToTaskException("User Assignment Error: The user is already assigned to this task. Please select a different user or review the task assignment.");
-        }
-        if (users.stream().count() == 1) {
-            task.setIsUsersAvailable(Boolean.FALSE);
         }
 
         task.getUsers().add(user);
@@ -155,6 +151,9 @@ public class TaskService {
         if (taskUpdateProgressDTO.getProgress() > 0 && taskUpdateProgressDTO.getProgress() < 100) {
             currentTask.setTaskStatus(TaskStatus.IN_PROGRESS.name());
         }
+        validateSpentHours(taskUpdateProgressDTO.getHoursSpent(),
+                currentTask.getHoursSpent(), currentTask.getInitialEstimation());
+        currentTask.setHoursSpent(taskUpdateProgressDTO.getHoursSpent());
         taskRepository.update(currentTask);
         return currentTask;
     }
@@ -164,9 +163,11 @@ public class TaskService {
         Task currentTask = findById(id);
         validateTaskProgress(taskUpdateDTO.getProgress(), currentTask.getProgress());
         currentTask.setProgress(taskUpdateDTO.getProgress());
-        validateSpentHours(taskUpdateDTO.getHoursSpent(), currentTask.getHoursSpent(),
-                currentTask.getInitialEstimation());
-        currentTask.setHoursSpent(taskUpdateDTO.getHoursSpent());
+        if(taskUpdateDTO.getHoursSpent()!= 0) {
+            validateSpentHours(taskUpdateDTO.getHoursSpent(), currentTask.getHoursSpent(),
+                    currentTask.getInitialEstimation());
+            currentTask.setHoursSpent(taskUpdateDTO.getHoursSpent());
+        }
         if (!(taskUpdateDTO.getTitle().isEmpty())) {
             currentTask.setTitle(taskUpdateDTO.getTitle());
         }
@@ -181,11 +182,22 @@ public class TaskService {
     }
 
     public void delete(Long id) {
+        Task currentTask = findById(id);
+        currentTask.getUsers().clear();
+        taskRepository.update(currentTask);
         taskRepository.delete(id);
     }
 
     public void deleteRelatedToProjectTasks(Long projectId) {
         taskRepository.deleteByProjectId(projectId);
+    }
+
+    public void deleteTasksToUser(String username) {
+        List<Task> tasks = taskRepository.getTasksRelatedToUser(username);
+        tasks.forEach(task -> {
+            task.getUsers().clear();
+            taskRepository.save(task);
+        });
     }
 
     private boolean isTaskInProject(String username, Long taskId) {

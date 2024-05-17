@@ -11,6 +11,6 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 public class MeetingUpdateDTO {
 
-    private LocalDateTime date;
+    private String date;
     private String title;
 }

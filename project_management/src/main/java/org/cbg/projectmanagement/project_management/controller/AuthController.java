@@ -18,6 +18,7 @@ import org.cbg.projectmanagement.project_management.dto.auth.RegisterDTO;
 import org.cbg.projectmanagement.project_management.entity.User;
 import org.cbg.projectmanagement.project_management.mapper.AuthMapper;
 import org.cbg.projectmanagement.project_management.security.AuthenticationStoreImpl;
+import org.cbg.projectmanagement.project_management.security.TokenProvider;
 import org.cbg.projectmanagement.project_management.service.UserService;
 
 @Path("/v1/auth")
@@ -33,6 +34,9 @@ public class AuthController {
     private UserService userService;
 
     @Inject
+    private TokenProvider tokenProvider;
+
+    @Inject
     private AuthenticationStoreImpl authenticationStore;
 
     @POST
@@ -42,31 +46,23 @@ public class AuthController {
     public Response login(AuthLoginDTO loginDTO) {
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
-        try {
             CredentialValidationResult validationResult =
                     authenticationStore.validate(new UsernamePasswordCredential(username, password));
             if (validationResult.getStatus() == CredentialValidationResult.Status.VALID) {
                 return Response
                         .status(Response.Status.OK)
-                        .entity(authMapper
-                                .mapUserToAuthResponseDTO(userService
-                                        .getUserByUsername(context.getUserPrincipal().getName())))
+                        .entity(Json.createObjectBuilder()
+                                .add("token",tokenProvider.createToken(validationResult.getCallerPrincipal().getName())
+                                ).build())
                         .build();
             } else {
                 return Response
                         .status(Response.Status.UNAUTHORIZED)
-                        .entity("Fail")
+                        .entity((Json.createObjectBuilder()
+                                .add("message", "Invalid Username or Password")
+                                .build()))
                         .build();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Response
-                .status(Response.Status.UNAUTHORIZED)
-                .entity(Json.createObjectBuilder()
-                        .add("message", "Invalid Username or Password")
-                        .build())
-                .build();
     }
 
 

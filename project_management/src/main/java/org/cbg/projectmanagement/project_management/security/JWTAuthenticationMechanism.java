@@ -34,15 +34,12 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return createToken(result, context);
             }
-            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         } else if (token != null) {
             return validateToken(token, context);
         } else if(context.isProtected()) {
-            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         }
-
         return context.doNothing();
     }
 
@@ -52,16 +49,14 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
                 UserDetails userDetails = tokenProvider.getUserDetails(token);
                 return context.notifyContainerAboutLogin(userDetails.getPrincipal(), userDetails.getAuthority());
             }
-            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         } catch (ExpiredJwtException e) {
-            addCorsHeaders(context.getResponse());
             return context.responseUnauthorized();
         }
     }
 
     private AuthenticationStatus createToken(CredentialValidationResult result, HttpMessageContext context) {
-        String jwt = tokenProvider.createToken(result.getCallerPrincipal().getName(), result.getCallerGroups());
+        String jwt = tokenProvider.createToken(result.getCallerPrincipal().getName());
         context.getResponse().setHeader("Authorization", "Bearer " + jwt);
         return context.notifyContainerAboutLogin(result.getCallerPrincipal(), result.getCallerGroups());
     }
@@ -72,7 +67,7 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
             String token = authorizationHeader.substring("Bearer".length(), authorizationHeader.length());
             return token;
         }
-        addCorsHeaders(context.getResponse());
+//        addCorsHeaders(context.getResponse());
         return null;
     }
 
@@ -81,6 +76,5 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
         response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
         response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
         response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-
     }
 }

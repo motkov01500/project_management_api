@@ -15,7 +15,6 @@ CREATE TABLE userr(
 CREATE TABLE project(
                      id SERIAL NOT NULL PRIMARY KEY,
                      key VARCHAR(10) NOT NULL,
-                     is_user_available_to_add BOOLEAN DEFAULT FALSE,
                      title VARCHAR(50)
 );
 
@@ -25,7 +24,6 @@ CREATE TABLE task(
                      progress INTEGER,
                      task_status varchar(20),
                      initial_estimation INTEGER,
-                     is_user_available_to_add BOOLEAN DEFAULT FALSE,
                      hours_spent INTEGER,
                      project_id SERIAL
 );
@@ -35,7 +33,6 @@ CREATE TABLE meeting(
                      title VARCHAR NOT NULL,
                      duration INTEGER NOT NULL,
                      date TIMESTAMP NOT NULL,
-                     is_user_available_to_add BOOLEAN DEFAULT TRUE,
                      project_id SERIAL
 );
 
