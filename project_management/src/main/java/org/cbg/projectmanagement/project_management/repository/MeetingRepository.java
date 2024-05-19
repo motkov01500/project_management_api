@@ -4,12 +4,13 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.cbg.projectmanagement.project_management.entity.*;
+import org.cbg.projectmanagement.project_management.filter.MeetingFilter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Stateless
-public class MeetingRepository extends BaseRepository<Meeting> {
+public class MeetingRepository extends BaseRepository<Meeting, MeetingFilter> {
 
     public MeetingRepository() {
         super(Meeting.class);
@@ -132,6 +133,11 @@ public class MeetingRepository extends BaseRepository<Meeting> {
             meeting.setIsDeleted(Boolean.TRUE);
             update(meeting);
         });
+    }
+
+    @Override
+    protected Predicate[] buildPredicates(MeetingFilter filter, CriteriaBuilder cb, CriteriaQuery<Meeting> cq, Root<Meeting> root) {
+        return new Predicate[0];
     }
 //
 //    @Override
