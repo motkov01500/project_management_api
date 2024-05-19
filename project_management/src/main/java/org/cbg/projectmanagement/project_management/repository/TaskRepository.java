@@ -76,12 +76,12 @@ public class TaskRepository extends BaseRepository<Task> {
     }
 
 
-    public boolean isUserAssignedAlreadyToTask(String username, Long taskId) {
+    public boolean isUserAssignedAlreadyToTask(Long userId, Long taskId) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<Task> query = getCriteriaQuery();
         Root<Task> taskRoot = query.from(Task.class);
         Join<Task, User> taskUserJoin = taskRoot.join(Task_.users);
-        Predicate isUserInTask = criteriaBuilder.equal(taskUserJoin.get(User_.username), username);
+        Predicate isUserInTask = criteriaBuilder.equal(taskUserJoin.get(User_.id), userId);
         Predicate isTaskInUser = criteriaBuilder.equal(taskRoot.get(Task_.id), taskId);
         query.select(taskRoot)
                 .where(criteriaBuilder.and(isTaskInUser, isUserInTask));

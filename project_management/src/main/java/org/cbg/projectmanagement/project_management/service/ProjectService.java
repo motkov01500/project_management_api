@@ -8,7 +8,6 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.project.*;
-import org.cbg.projectmanagement.project_management.dto.task.UnAssignUserToTaskDTO;
 import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.exception.ProjectAlreadyExistsException;
@@ -100,7 +99,7 @@ public class ProjectService {
     public Project create(ProjectCreateDTO projectCreateDTO) {
         Project project = new Project(projectCreateDTO.getKey(), projectCreateDTO.getTitle(),
                 Boolean.FALSE);
-        if(projectRepository.isProjectExists(projectCreateDTO.getKey())) {
+        if (projectRepository.isProjectExists(projectCreateDTO.getKey())) {
             throw new ProjectAlreadyExistsException("Project with this key already exists.");
         }
         projectRepository.save(project);
@@ -110,7 +109,7 @@ public class ProjectService {
     @Transactional
     public Project update(Long id, ProjectUpdateDTO projectUpdateDTO) {
         Project project = findById(id);
-        if(projectRepository.isProjectExists(projectUpdateDTO.getKey())) {
+        if (projectRepository.isProjectExists(projectUpdateDTO.getKey())) {
             throw new ProjectAlreadyExistsException("Project with this key already exists");
         }
         if (!projectUpdateDTO.getKey().isEmpty() && !(projectUpdateDTO.getKey().equals(project.getKey()))) {
@@ -153,13 +152,19 @@ public class ProjectService {
 
     @Transactional
     public JsonObject assignUserToProject(ProjectAssignUserDTO projectAssignUserDTO) {
-        User currentUser = userService.findUserById(projectAssignUserDTO.getUserId());
         Project currentProject = findById(projectAssignUserDTO.getProjectId());
-        if (isUserInProject(currentProject.getKey(), currentUser.getUsername())) {
-            throw new UserAlreadyInProjectException("User already in current project");
-        }
-        currentProject.getUsers().add(currentUser);
-        projectRepository.update(currentProject);
+        List<User> users = projectAssignUserDTO.getUsers()
+                .stream()
+                .map(user -> {
+                    User currentUser = userService.findUserById(user);
+                    if (isUserInProject(currentProject.getKey(), currentUser.getUsername())) {
+                        throw new UserAlreadyInProjectException("Any of users you chose," +
+                                " already in current project.");
+                    }
+                    return currentUser;
+                })
+                .collect(Collectors.toList());
+        currentProject.getUsers().addAll(users);
         projectRepository.update(currentProject);
         return Json.createObjectBuilder()
                 .add("message", "User is successfully assigned to project.")
@@ -174,7 +179,7 @@ public class ProjectService {
     }
 
     public void deletedProjectsByUsername(String username) {
-        List<Project> projects = projectRepository.findProjectsRelatedToUser(username,0,0);
+        List<Project> projects = projectRepository.findProjectsRelatedToUser(username, 0, 0);
         projects.forEach(project -> {
             project.getUsers().clear();
             projectRepository.save(project);

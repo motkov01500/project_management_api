@@ -2,6 +2,8 @@ package org.cbg.projectmanagement.project_management.dto.task;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -9,6 +11,6 @@ import lombok.*;
 @AllArgsConstructor
 public class AssignUserToTaskDTO {
 
-    private String username;
+    private List<Long> users;
     private Long taskId;
 }

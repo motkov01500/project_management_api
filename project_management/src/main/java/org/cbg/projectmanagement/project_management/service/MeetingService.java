@@ -24,6 +24,7 @@ import org.cbg.projectmanagement.project_management.repository.MeetingRepository
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class MeetingService {
@@ -108,7 +109,7 @@ public class MeetingService {
 
     public List<Meeting> findMeetingsRelatedToUserAndProject(String projectKey, String username) {
         return meetingRepository
-                .getMeetingsRelatedToProjectAndUser(username, projectKey,0,0);
+                .getMeetingsRelatedToProjectAndUser(username, projectKey, 0, 0);
     }
 
     public boolean isUserAssignedToMeeting(Long meetingId, Long userId) {
@@ -129,7 +130,7 @@ public class MeetingService {
         Meeting updatedMeeting = findById(id);
         if (!meetingUpdateDTO.getDate().isEmpty()) {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
-            LocalDateTime localDateTime = LocalDateTime.parse(meetingUpdateDTO.getDate(),dateTimeFormatter);
+            LocalDateTime localDateTime = LocalDateTime.parse(meetingUpdateDTO.getDate(), dateTimeFormatter);
             updatedMeeting.setDate(localDateTime);
         }
         if (!meetingUpdateDTO.getTitle().isEmpty()) {
@@ -162,16 +163,24 @@ public class MeetingService {
 
     @Transactional
     public JsonObject addUserToMeeting(MeetingAssignUserDTO meetingAssignUserDTO) {
-        User userToAssign = userService.findUserById(meetingAssignUserDTO.getUserId());
         Meeting meeting = findById(meetingAssignUserDTO.getMeetingId());
-        List<User> users = userService.findUsersNotAssignedToMeeting(meeting.getId());
-        if (!(projectService.isUserInProject(meeting.getProject().getKey(), userToAssign.getUsername()))) {
-            throw new ValidationException("User is not in current project.");
-        }
+        List<User> usersToAssign = meetingAssignUserDTO.getUsers()
+                .stream()
+                .map(user -> {
+                    User userToAssign = userService.findUserById(user);
+                    if (!(projectService.isUserInProject(meeting.getProject().getKey(), userToAssign.getUsername()))) {
+                        throw new ValidationException("User is not in current project.");
+                    }
+                    if(isUserAssignedToMeeting(meeting.getId(),user)) {
+                        throw new UserIsAlreadyAssignedToMeetingException("User is already assigned to this meeting.");
+                    }
+                    return userToAssign;
+                })
+                .collect(Collectors.toList());
         if (meeting.getDate().isBefore(LocalDateTime.now())) {
             throw new MeetingOutdatedException("Meeting is outdated.");
         }
-        meeting.getUsers().add(userToAssign);
+        meeting.getUsers().addAll(usersToAssign);
         return Json.createObjectBuilder()
                 .add("message", "User is added to meeting!")
                 .build();

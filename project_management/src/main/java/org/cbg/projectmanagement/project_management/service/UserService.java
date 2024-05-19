@@ -297,7 +297,6 @@ public class UserService {
         meetingService.deleteByUsername(user.getUsername());
         projectService.deletedProjectsByUsername(user.getUsername());
         taskService.deleteTasksToUser(user.getUsername());
-        //TODO:like 300row for projects and tasks
         userRepository.save(user);
         userRepository.delete(id);
     }

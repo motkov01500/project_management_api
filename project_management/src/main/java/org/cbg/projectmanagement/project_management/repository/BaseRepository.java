@@ -8,9 +8,11 @@ import jakarta.persistence.criteria.Root;
 import lombok.Getter;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
 
-public abstract class BaseRepository<T> {
+//public abstract class BaseRepository<T, FILTER> {
+    public abstract class BaseRepository<T> {
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("persistence");
 
@@ -65,6 +67,17 @@ public abstract class BaseRepository<T> {
             e.printStackTrace();
         }
     }
+
+//    protected abstract Predicate[] buildPredicates(FILTER filter, CriteriaBuilder cb, CriteriaQuery<T> cq, Root<T> root);
+//
+//    public List<T> list(FILTER filter) {
+//        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+//        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entity);
+//        Root<T> root = criteriaQuery.from(entity);
+//        criteriaQuery.select(root);
+//        criteriaQuery.where(buildPredicates(filter, criteriaBuilder, criteriaQuery,root));
+//        return getEntityByCriteria(criteriaQuery).getResultList();
+//    }
 
     public TypedQuery<T> getEntityByCriteria(CriteriaQuery<T> query) {
         return entityManager.createQuery(query);

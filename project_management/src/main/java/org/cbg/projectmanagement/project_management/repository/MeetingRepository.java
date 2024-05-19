@@ -133,4 +133,9 @@ public class MeetingRepository extends BaseRepository<Meeting> {
             update(meeting);
         });
     }
+//
+//    @Override
+//    protected Predicate[] buildPredicates(Object o, CriteriaBuilder cb, CriteriaQuery cq, Root root) {
+//        return new Predicate[0];
+//    }
 }

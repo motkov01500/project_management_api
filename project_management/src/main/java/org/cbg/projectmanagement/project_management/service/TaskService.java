@@ -18,6 +18,7 @@ import org.cbg.projectmanagement.project_management.exception.ValidationExceptio
 import org.cbg.projectmanagement.project_management.repository.TaskRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class TaskService {
@@ -107,14 +108,22 @@ public class TaskService {
 
     @Transactional
     public JsonObject assignUserToTask(AssignUserToTaskDTO assignUserToTaskDTO) {
-        User user = userService.getUserByUsername(assignUserToTaskDTO.getUsername());
         Task task = findById(assignUserToTaskDTO.getTaskId());
-        List<User> users = userService.findUsersNotAssignedToTask(task.getId());
-        if (isTaskInProject(assignUserToTaskDTO.getUsername(), assignUserToTaskDTO.getTaskId())) {
-            throw new UserAlreadyAssignedToTaskException("User Assignment Error: The user is already assigned to this task. Please select a different user or review the task assignment.");
-        }
-
-        task.getUsers().add(user);
+        Project project = projectService.findByKey(task.getProject().getKey());
+        List<User> users = assignUserToTaskDTO.getUsers()
+                .stream()
+                .map(user -> {
+                    User currentUser = userService.findUserById(user);
+                    if (isTaskInProject(user, assignUserToTaskDTO.getTaskId())) {
+                        throw new UserAlreadyAssignedToTaskException("Any of chosen users are in current task.");
+                    }
+                    if(!projectService.isUserInProject(project.getKey(),currentUser.getUsername())) {
+                        throw new ValidationException("Any of chosen users are not in current project.");
+                    }
+                    return currentUser;
+                })
+                .collect(Collectors.toList());
+        task.getUsers().addAll(users);
         taskRepository.update(task);
         return Json.createObjectBuilder()
                 .add("message", "User is successfully assigned to task.")
@@ -200,8 +209,8 @@ public class TaskService {
         });
     }
 
-    private boolean isTaskInProject(String username, Long taskId) {
-        return taskRepository.isUserAssignedAlreadyToTask(username, taskId);
+    private boolean isTaskInProject(Long userId, Long taskId) {
+        return taskRepository.isUserAssignedAlreadyToTask(userId, taskId);
     }
 
     private void validateTaskProgress(int newProjectProgress, int oldProjectProgress) {
