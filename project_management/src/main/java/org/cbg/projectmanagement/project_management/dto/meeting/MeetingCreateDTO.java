@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 public class MeetingCreateDTO {
 
-    private LocalDateTime date;
+    private String date;
     private String title;
     private Long projectId;
 }

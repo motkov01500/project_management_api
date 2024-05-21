@@ -11,6 +11,8 @@ public class UserUpdateDTO {
 
     private String username;
     private String password;
-    private String fullName;
-    private String roleName;
+    private String confirmPassword;
+    private String firstName;
+    private String lastName;
+//    private String roleName;
 }

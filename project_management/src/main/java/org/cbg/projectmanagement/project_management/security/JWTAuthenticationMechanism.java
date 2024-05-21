@@ -67,7 +67,6 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
             String token = authorizationHeader.substring("Bearer".length(), authorizationHeader.length());
             return token;
         }
-//        addCorsHeaders(context.getResponse());
         return null;
     }
 

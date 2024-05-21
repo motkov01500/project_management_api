@@ -5,7 +5,10 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.cbg.projectmanagement.project_management.dto.PageFilterDTO;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.task.*;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.mapper.TaskMapper;
 import org.cbg.projectmanagement.project_management.service.TaskService;
 
@@ -20,14 +23,19 @@ public class TaskController {
     @Inject
     private TaskMapper taskMapper;
 
-    @GET
-    @Path("/administrator/get-all/{page}/{offset}")
+    @POST
+    @Path("/administrator/get-all")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getAll(PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.findAll(page, offset)
+                .entity(taskService.findAll(pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
@@ -45,14 +53,19 @@ public class TaskController {
                 .build();
     }
 
-    @GET
-    @Path("/administrator/get-all-related-to-project/{projectKey}/{page}/{offset}")
+    @POST
+    @Path("/administrator/get-all-related-to-project/{projectKey}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAllRelatedToProject(@PathParam("projectKey") String projectKey, @PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getAllRelatedToProject(@PathParam("projectKey") String projectKey, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.findAllRelatedToProject(projectKey, page, offset)
+                .entity(taskService.findAllRelatedToProject(projectKey, pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))
@@ -70,14 +83,19 @@ public class TaskController {
                 .build();
     }
 
-    @GET
-    @Path("/current-user-project-related/{projectKey}/{page}/{offset}")
+    @POST
+    @Path("/current-user-project-related/{projectKey}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getUserRelated(@PathParam("projectKey") String projectKey, @PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getUserRelated(@PathParam("projectKey") String projectKey, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(taskService.getTasksRelatedToCurrentUserAndProject(projectKey, page, offset)
+                .entity(taskService.getTasksRelatedToCurrentUserAndProject(projectKey, pageFilterDTO.getPage()
+                                , pageFilterDTO.getOffset(), new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(taskMapper::mapTaskToTaskDTO)
                         .collect(Collectors.toList()))

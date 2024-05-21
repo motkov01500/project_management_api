@@ -31,8 +31,11 @@ public class User implements Serializable {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "full_name")
-    private String fullName;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -53,10 +56,11 @@ public class User implements Serializable {
     @ManyToMany(mappedBy = "users", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Task> tasks;
 
-    public User(String username, String password, String fullName, Role role, Boolean isDeleted) {
+    public User(String username, String password, String firstName, String lastName, Role role, Boolean isDeleted) {
         this.username = username;
         this.password = password;
-        this.fullName = fullName;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.role = role;
         this.isDeleted = isDeleted;
     }

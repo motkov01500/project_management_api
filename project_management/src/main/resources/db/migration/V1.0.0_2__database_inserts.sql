@@ -3,10 +3,10 @@ VALUES ('administrator');
 INSERT INTO role (name)
 VALUES ('user');
 
-INSERT INTO userr (username, password, full_name, image_url, role_id)
-VALUES ('admin', '$2a$12$D9x15f2upu7K4iimh1J5aOu7UhWp5zBmYdbMNZC/cVIMwTB9vPZxq', 'Peter Petrov', 'https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 1);
-INSERT INTO userr (username, password, full_name,image_url, role_id)
-VALUES ('liubaka', '$2a$12$QmfznLTYW0MNCZIcnh9db.taZpXwjvzEILb9eqSbMDOcX6dbnTzxu', 'Lyubo Motkov','https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 2);
+INSERT INTO userr (username, password, first_name,last_name, image_url, role_id)
+VALUES ('admin', '$2a$12$D9x15f2upu7K4iimh1J5aOu7UhWp5zBmYdbMNZC/cVIMwTB9vPZxq', 'Peter', 'Petrov', 'https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 1);
+INSERT INTO userr (username, password, first_name,last_name,image_url, role_id)
+VALUES ('liubaka', '$2a$12$QmfznLTYW0MNCZIcnh9db.taZpXwjvzEILb9eqSbMDOcX6dbnTzxu', 'Lyubo', 'Motkov','https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 2);
 
 INSERT INTO project (key, title)
 VALUES ('edno', 'mercedes');

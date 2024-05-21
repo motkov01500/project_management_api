@@ -6,10 +6,13 @@ import jakarta.json.Json;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.cbg.projectmanagement.project_management.dto.PageFilterDTO;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.project.UnAssignUserFromProject;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.service.ProjectService;
@@ -25,14 +28,19 @@ public class ProjectController {
     @Inject
     private ProjectMapper projectMapper;
 
-    @GET
-    @Path("/administrator/get-all/{page}/{offset}")
+    @POST
+    @Path("/administrator/get-all")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getAll(PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.findAll(page,offset)
+                .entity(projectService.findAll(pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(projectMapper::mapProjectToProjectDTO)
                         .collect(Collectors.toList()))
@@ -76,17 +84,18 @@ public class ProjectController {
                 .build();
     }
 
-    @GET
-    @Path("/get-projects-current-user/{page}/{offset}")
+    @POST
+    @Path("/get-projects-current-user")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getCurrentLoggedUserProjects(@PathParam("page")int page, @PathParam("offset") int offset) {
+    public Response getCurrentLoggedUserProjects(PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(projectService.findCurrentUserProjects(page, offset)
-                        .stream()
-                        .map(projectMapper::mapProjectToProjectDTO)
-                        .collect(Collectors.toList()))
+                .entity(projectService.findCurrentUserProjects(pageFilterDTO.getPage(), pageFilterDTO.getOffset(), new Sort(pageFilterDTO.getSortColumn(), sortOrder)))
                 .build();
     }
 

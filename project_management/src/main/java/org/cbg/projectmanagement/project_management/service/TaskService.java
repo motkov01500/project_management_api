@@ -7,6 +7,7 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.task.*;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.Task;
@@ -35,20 +36,26 @@ public class TaskService {
     @Context
     private SecurityContext context;
 
-    public List<Task> findAll(int page, int offset) {
+    public List<Task> findAll(int page, int offset, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         List<Task> tasks = taskRepository
-                .findAll(page, offset);
+                .findAll(page, offset, sort);
         return tasks;
     }
 
     public int findAllSize() {
         return taskRepository
-                .findAll(0, 0)
+                .findAll(0, 0, null)
                 .size();
     }
 
-    public List<Task> findAllRelatedToProject(String projectKey, int page, int offside) {
-        List<Task> tasks = taskRepository.getAllTasksRelatedToProject(projectKey, page, offside);
+    public List<Task> findAllRelatedToProject(String projectKey, int page, int offside, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
+        List<Task> tasks = taskRepository.getAllTasksRelatedToProject(projectKey, page, offside, sort);
         Project project = projectService.findByKey(projectKey);
         if (tasks.isEmpty()) {
             throw new NotFoundResourceException("Tasks are not found for current project.");
@@ -56,9 +63,14 @@ public class TaskService {
         return tasks;
     }
 
+    public int countNotFinishedTaskToCurrentUser(String projectKey) {
+        return taskRepository
+                .countNotFinishedTasksRelatedToUserAndProject(context.getUserPrincipal().getName(), projectKey);
+    }
+
     public int findAllRelatedToProjectSize(String projectKey) {
         return taskRepository
-                .getAllTasksRelatedToProject(projectKey, 0, 0)
+                .getAllTasksRelatedToProject(projectKey, 0, 0, null)
                 .size();
     }
 
@@ -73,15 +85,18 @@ public class TaskService {
     }
 
     @Transactional
-    public List<Task> getTasksRelatedToCurrentUserAndProject(String projectKey, int page, int offside) {
+    public List<Task> getTasksRelatedToCurrentUserAndProject(String projectKey, int page, int offside, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         Project project = projectService.findByKey(projectKey);
         return taskRepository
-                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, page, offside);
+                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, page, offside, sort);
     }
 
     public int getTasksRelatedToCurrentUserAndProjectSize(String projectKey) {
         return taskRepository
-                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, 0, 0)
+                .getTasksRelatedToCurrentUserAndProject(context.getUserPrincipal().getName(), projectKey, 0, 0, null)
                 .size();
     }
 
@@ -89,7 +104,7 @@ public class TaskService {
     public List<Task> getTasksRelatedToUserAndProject(String projectKey, String username) {
         Project project = projectService.findByKey(projectKey);
         return taskRepository
-                .getTasksRelatedToCurrentUserAndProject(username, projectKey, 0, 0);
+                .getTasksRelatedToCurrentUserAndProject(username, projectKey, 0, 0, null);
     }
 
     @Transactional
@@ -160,8 +175,7 @@ public class TaskService {
         if (taskUpdateProgressDTO.getProgress() > 0 && taskUpdateProgressDTO.getProgress() < 100) {
             currentTask.setTaskStatus(TaskStatus.IN_PROGRESS.name());
         }
-        validateSpentHours(taskUpdateProgressDTO.getHoursSpent(),
-                currentTask.getHoursSpent(), currentTask.getInitialEstimation());
+        validateSpentHours(taskUpdateProgressDTO.getHoursSpent(), currentTask.getHoursSpent());
         currentTask.setHoursSpent(taskUpdateProgressDTO.getHoursSpent());
         taskRepository.update(currentTask);
         return currentTask;
@@ -172,9 +186,14 @@ public class TaskService {
         Task currentTask = findById(id);
         validateTaskProgress(taskUpdateDTO.getProgress(), currentTask.getProgress());
         currentTask.setProgress(taskUpdateDTO.getProgress());
+        if (taskUpdateDTO.getProgress() == 100) {
+            currentTask.setTaskStatus(TaskStatus.DONE.name());
+        }
+        if (taskUpdateDTO.getProgress() > 0 && taskUpdateDTO.getProgress() < 100) {
+            currentTask.setTaskStatus(TaskStatus.IN_PROGRESS.name());
+        }
         if(taskUpdateDTO.getHoursSpent()!= 0) {
-            validateSpentHours(taskUpdateDTO.getHoursSpent(), currentTask.getHoursSpent(),
-                    currentTask.getInitialEstimation());
+            validateSpentHours(taskUpdateDTO.getHoursSpent(), currentTask.getHoursSpent());
             currentTask.setHoursSpent(taskUpdateDTO.getHoursSpent());
         }
         if (!(taskUpdateDTO.getTitle().isEmpty())) {
@@ -203,8 +222,9 @@ public class TaskService {
 
     public void deleteTasksToUser(String username) {
         List<Task> tasks = taskRepository.getTasksRelatedToUser(username);
+        User currentUser = userService.getUserByUsername(username);
         tasks.forEach(task -> {
-            task.getUsers().clear();
+            task.getUsers().remove(currentUser);
             taskRepository.save(task);
         });
     }
@@ -222,12 +242,9 @@ public class TaskService {
         }
     }
 
-    private void validateSpentHours(int newSpentHours, int oldSpentHours, int initialEstimation) {
+    private void validateSpentHours(int newSpentHours, int oldSpentHours) {
         if (newSpentHours < oldSpentHours) {
             throw new ValidationException("Invalid value. New spent hours must be greater than already spent.");
-        }
-        if (newSpentHours > initialEstimation) {
-            throw new ValidationException("Invalid value. New spent hours mustn't be greater than initial estimation hours.");
         }
     }
 }

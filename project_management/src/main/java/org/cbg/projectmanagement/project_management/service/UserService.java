@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.auth.RegisterDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserPasswordUpdateDTO;
@@ -41,9 +42,12 @@ public class UserService {
     @Context
     private SecurityContext context;
 
-    public List<User> findAll(int page, int offset) {
+    public List<User> findAll(int page, int offset, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         return userRepository
-                .findAll(page, offset)
+                .findAll(page, offset, sort)
                 .stream()
                 .filter(user -> !user.getUsername().equals("admin"))
                 .collect(Collectors.toList());
@@ -51,18 +55,21 @@ public class UserService {
 
     public int findAllSize() {
         return userRepository
-                .findAll(0, 0)
+                .findAll(0, 0, null)
                 .size();
     }
 
-    public List<User> getUsersRelatedToProject(String key, int page, int offset) {
+    public List<User> getUsersRelatedToProject(String key, int page, int offset, Sort sort) {
+        if (sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         return userRepository
-                .getUsersRelatedToProject(key, page, offset);
+                .getUsersRelatedToProject(key, page, offset, sort);
     }
 
     public int getUsersRelatedToProjectSize(String key) {
         return userRepository
-                .getUsersRelatedToProject(key, 0, 0)
+                .getUsersRelatedToProject(key, 0, 0, null)
                 .size();
     }
 
@@ -78,14 +85,17 @@ public class UserService {
         return users;
     }
 
-    public List<User> findUsersRelatedToTask(Long taskId, int page, int offset) {
+    public List<User> findUsersRelatedToTask(Long taskId, int page, int offset,Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         return userRepository
-                .getRelatedToTask(taskId, page, offset);
+                .getRelatedToTask(taskId, page, offset, sort);
     }
 
     public int findUsersRelatedToTaskSize(Long taskId) {
         return userRepository
-                .getRelatedToTask(taskId, 0, 0)
+                .getRelatedToTask(taskId, 0, 0, null)
                 .size();
     }
 
@@ -141,14 +151,17 @@ public class UserService {
         return getUserByUsername(context.getUserPrincipal().getName());
     }
 
-    public List<User> getUsersRelatedToMeeting(Long meetingId, int page, int offset) {
+    public List<User> getUsersRelatedToMeeting(Long meetingId, int page, int offset, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         return userRepository
-                .getUsersRelatedToMeeting(meetingId, page, offset);
+                .getUsersRelatedToMeeting(meetingId, page, offset, sort);
     }
 
     public int getUsersRelatedToMeetingSize(Long meetingId) {
         return userRepository
-                .getUsersRelatedToMeeting(meetingId, 0, 0)
+                .getUsersRelatedToMeeting(meetingId, 0, 0, null)
                 .size();
     }
 
@@ -171,11 +184,6 @@ public class UserService {
         return user;
     }
 
-    public List<User> getUnassignedUsers() {
-        return userRepository
-                .getUnassignedUsers();
-    }
-
     @Transactional
     public User createUser(UserCreateDTO userCreateDTO) {
         if (userRepository.isUserExists(userCreateDTO.getUsername())) {
@@ -184,8 +192,14 @@ public class UserService {
         Role role = roleService.findRoleByName("user");
         String hashedPassword = hashPassword(userCreateDTO.getPassword());
         validatePassword(userCreateDTO.getPassword());
+        if(!userCreateDTO.getConfirmPassword().equals(userCreateDTO.getPassword())) {
+            throw new ValidationException("Passwords do not match. Please try again.");
+        }
+        if (userCreateDTO.getFistName().isEmpty() || userCreateDTO.getLastName().isEmpty()) {
+            throw new ValidationException("You must enter the first name and last name of user.");
+        }
         User user = new User(userCreateDTO.getUsername(), hashedPassword,
-                userCreateDTO.getFullName(), role, Boolean.FALSE);
+                userCreateDTO.getFistName(), userCreateDTO.getLastName(), role, Boolean.FALSE);
         user.setImageUrl("https://www.idahoagc.org/sites/default/files/default_images/default-medium.png");
         userRepository.save(user);
         return user;
@@ -198,12 +212,16 @@ public class UserService {
         }
         user.setUsername(registerDTO.getUsername());
         validatePassword(registerDTO.getPassword());
+        if (!registerDTO.getConfirmPassword().equals(registerDTO.getPassword())) {
+            throw new ValidationException("Passwords do not match. Please try again.");
+        }
         user.setPassword(hashPassword(registerDTO.getPassword()));
         user.setRole(roleService.findRoleByName("user"));
-        if (registerDTO.getFullName().trim().isEmpty()) {
-            throw new ValidationException("You must enter the full name of user.");
+        if (registerDTO.getFirstName().trim().isEmpty() || registerDTO.getLastName().trim().isEmpty()) {
+            throw new ValidationException("You must enter the first and last name of user.");
         }
-        user.setFullName(registerDTO.getFullName());
+        user.setFirstName(registerDTO.getFirstName());
+        user.setLastName(registerDTO.getLastName());
         user.setIsDeleted(false);
         user.setImageUrl("https://www.idahoagc.org/sites/default/files/default_images/default-medium.png");
         userRepository.save(user);
@@ -261,22 +279,20 @@ public class UserService {
         if (!(userUpdateDTO.getPassword().isEmpty()) &&
                 !(userUpdateDTO.getPassword().equals(user.getPassword()))) {
             validatePassword(userUpdateDTO.getPassword());
+            if (!userUpdateDTO.getPassword().equals(userUpdateDTO.getConfirmPassword())) {
+                throw new ValidationException("Passwords do not match. Please try again.");
+            }
             String hashedPassword = hashPassword(userUpdateDTO.getPassword());
             user.setPassword(hashedPassword);
         }
 
-        if (!(userUpdateDTO.getFullName().isEmpty()) &&
-                !(userUpdateDTO.getFullName().equals(user.getFullName()))) {
-            user.setFullName(userUpdateDTO.getFullName());
+        if (!userUpdateDTO.getFirstName().isEmpty() && !userUpdateDTO.getFirstName().equals(user.getFirstName())) {
+            user.setFirstName(userUpdateDTO.getFirstName());
         }
 
-        if (!(userUpdateDTO.getRoleName().isEmpty()) &&
-                !(userUpdateDTO.getRoleName().equals(user.getRole().getName()))) {
-            user.setRole(
-                    roleService.findRoleByName(userUpdateDTO.getRoleName())
-            );
+        if (!userUpdateDTO.getLastName().isEmpty() && !userUpdateDTO.getLastName().equals(user.getLastName())) {
+            user.setLastName(userUpdateDTO.getLastName());
         }
-
         userRepository.update(user);
         return user;
     }

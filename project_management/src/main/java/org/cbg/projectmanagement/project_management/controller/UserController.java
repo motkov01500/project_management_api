@@ -7,12 +7,15 @@ import jakarta.json.Json;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.cbg.projectmanagement.project_management.dto.PageFilterDTO;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.auth.AuthResponseDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserPasswordUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateDTO;
 import org.cbg.projectmanagement.project_management.dto.user.UserUpdateImageDTO;
 import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.mapper.AuthMapper;
 import org.cbg.projectmanagement.project_management.mapper.UserMapper;
 import org.cbg.projectmanagement.project_management.service.UserService;
@@ -29,14 +32,19 @@ public class UserController {
     @Inject
     private UserMapper userMapper;
 
-    @GET
+    @POST
+    @Path("/administrator/get-all")
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/administrator/get-all/{page}/{offset}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("administrator")
-    public Response getAll(@PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getAll(PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.findAll(page, offset)
+                .entity(userService.findAll(pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
@@ -146,28 +154,19 @@ public class UserController {
                 .build();
     }
 
-    @GET
+    @POST
+    @Path("/get-all-related-to-project/{key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/administrator/get-all-unassigned")
-    @RolesAllowed("administrator")
-    public Response getUnassignedUsers() {
-        return Response
-                .status(Response.Status.OK)
-                .entity(userService.getUnassignedUsers()
-                        .stream()
-                        .map(userMapper::userToUserResponseDTO)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/get-all-related-to-project/{key}/{page}/{offset}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({"user", "administrator"})
-    public Response getUsersRelatedToProject(@PathParam("key") String key, @PathParam("page") int page,@PathParam("offset") int offset) {
+    public Response getUsersRelatedToProject(@PathParam("key") String key, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.getUsersRelatedToProject(key, page, offset)
+                .entity(userService.getUsersRelatedToProject(key, pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
@@ -198,14 +197,19 @@ public class UserController {
                 .build();
     }
 
-    @GET
+    @POST
+    @Path("/get-all-related-to-meeting/{meetingId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/get-all-related-to-meeting/{meetingId}/{page}/{offset}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({"user", "administrator"})
-    public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id, @PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getUsersRelatedToMeeting(@PathParam("meetingId") Long id,PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(userService.getUsersRelatedToMeeting(id, page, offset)
+                .entity(userService.getUsersRelatedToMeeting(id, pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))
@@ -223,15 +227,20 @@ public class UserController {
                 .build();
     }
 
-    @GET
-    @Path("/get-all-related-to-task/{taskId}/{page}/{offset}")
+    @POST
+    @Path("/get-all-related-to-task/{taskId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({"administrator", "user"})
-    public Response getAllRelatedToTask(@PathParam("taskId") Long taskId, @PathParam("page") int page,@PathParam("offset") int offset) {
+    public Response getAllRelatedToTask(@PathParam("taskId") Long taskId, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
                 .entity(userService
-                        .findUsersRelatedToTask(taskId, page, offset)
+                        .findUsersRelatedToTask(taskId, pageFilterDTO.getPage(), pageFilterDTO.getOffset()
+                                , new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(userMapper::userToUserResponseDTO)
                         .collect(Collectors.toList()))

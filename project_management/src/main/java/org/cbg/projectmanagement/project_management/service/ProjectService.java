@@ -7,11 +7,13 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
+import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.project.*;
 import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.exception.ProjectAlreadyExistsException;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
+import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
 
@@ -31,6 +33,9 @@ public class ProjectService {
     private MeetingService meetingService;
 
     @Inject
+    private MeetingMapper meetingMapper;
+
+    @Inject
     private TaskService taskService;
 
     @Inject
@@ -39,28 +44,48 @@ public class ProjectService {
     @Context
     private SecurityContext context;
 
-    public List<Project> findAll(int page, int offset) {
+    public List<Project> findAll(int page, int offset, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         List<Project> projects = projectRepository
-                .findAll(page, offset);
+                .findAll(page, offset, sort);
         return projects;
     }
 
     public List<Project> findAllWithoutPaging() {
-        return projectRepository.findAll(0, 0);
+        return projectRepository.findAll(0, 0, null);
     }
 
     public int findAllSize() {
-        return projectRepository.findAll(0, 0).size();
+        return projectRepository.findAll(0, 0, null).size();
     }
 
-    public List<Project> findCurrentUserProjects(int pageNumber, int offside) {
-        return projectRepository
-                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), pageNumber, offside);
+    public List<ProjectResponseDTO> findCurrentUserProjects(int pageNumber, int offside, Sort sort) {
+        if (sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
+        List<Project> projects = projectRepository
+                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), pageNumber, offside, sort);
+        List<ProjectResponseDTO> mappedProjects = projects
+                .stream()
+                .map(project -> projectMapper.mapProjectToProjectDTO(project))
+                .collect(Collectors.toList());
+        List<ProjectResponseDTO> finalMappedProjects = mappedProjects.stream().map(project -> {
+                    List<Meeting> meeting = meetingService.findMostRecentMeetingToUser(project.getKey());
+                    if (!meeting.isEmpty()) {
+                        project.setMostRecentMeeting(meetingMapper.mapMeetingToRecentMeetingDTO(meeting.get(0)));
+                    }
+                    project.setRemainingTasks(taskService.countNotFinishedTaskToCurrentUser(project.getKey()));
+                    return project;
+                })
+                .collect(Collectors.toList());
+        return finalMappedProjects;
     }
 
     public int findCurrentUserProjectsSize() {
         return projectRepository
-                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), 0, 0).size();
+                .findProjectsRelatedToUser(context.getUserPrincipal().getName(), 0, 0, null).size();
     }
 
     public Project findById(Long id) {
@@ -82,17 +107,6 @@ public class ProjectService {
     public boolean isUserInProject(String projectKey, String username) {
         return projectRepository
                 .isUserInProject(projectKey, username);
-    }
-
-    public List<Project> findUnassignedProjects(int pageNumber, int offset) {
-        return projectRepository
-                .findUnassignedProjects(pageNumber, offset);
-    }
-
-    public int findUnassignedProjectsSize() {
-        return projectRepository
-                .findUnassignedProjects(0, 0)
-                .size();
     }
 
     @Transactional
@@ -179,9 +193,10 @@ public class ProjectService {
     }
 
     public void deletedProjectsByUsername(String username) {
-        List<Project> projects = projectRepository.findProjectsRelatedToUser(username, 0, 0);
+        List<Project> projects = projectRepository.findProjectsRelatedToUser(username, 0, 0, null);
+        User currentUser = userService.getUserByUsername(username);
         projects.forEach(project -> {
-            project.getUsers().clear();
+            project.getUsers().remove(currentUser);
             projectRepository.save(project);
         });
     }

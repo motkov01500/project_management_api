@@ -10,5 +10,7 @@ public class RegisterDTO {
 
     private String username;
     private String password;
-    private String fullName;
+    private String confirmPassword;
+    private String firstName;
+    private String lastName;
 }

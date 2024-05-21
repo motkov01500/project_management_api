@@ -20,6 +20,8 @@ import org.cbg.projectmanagement.project_management.exception.UserIsAlreadyAssig
 import org.cbg.projectmanagement.project_management.exception.ValidationException;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.repository.MeetingRepository;
+import org.cbg.projectmanagement.project_management.dto.Sort;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,7 +30,9 @@ import java.util.stream.Collectors;
 
 @Stateless
 public class MeetingService {
-
+    /**
+     * TODO VIEW for required
+     */
     @Inject
     private MeetingRepository meetingRepository;
 
@@ -44,27 +48,24 @@ public class MeetingService {
     @Context
     private SecurityContext context;
 
-    public List<Meeting> findAll(int pageNumber, int offsite) {
-        List<Meeting> meetings = meetingRepository
-                .findAll(pageNumber, offsite);
-        return meetings;
-    }
-
-    public int findAllSize() {
+    public List<Meeting> findMostRecentMeetingToUser(String projectKey) {
         return meetingRepository
-                .findAll(0, 0)
-                .size();
+                .findRecentMeetingsToUser(context.getUserPrincipal().getName(), projectKey);
     }
 
-    public List<Meeting> getAllMeetingsToCurrentUser(int pageNumber, int offsite) {
+    public List<Meeting> getAllMeetingsToCurrentUser(int pageNumber, int offsite, Sort sort) {
+        if(sort.getOrder() == null || sort.getColumn().isEmpty()) {
+            sort.setOrder(SortOrder.DEFAULT);
+            sort.setColumn("id");
+        }
         List<Meeting> meetings = meetingRepository
-                .getCurrentUserMeetings(context.getUserPrincipal().getName(), pageNumber, offsite);
+                .getCurrentUserMeetings(context.getUserPrincipal().getName(), pageNumber, offsite, sort);
         return meetings;
     }
 
     public int getAllMeetingsToCurrentUserSize() {
         return meetingRepository
-                .getCurrentUserMeetings(context.getUserPrincipal().getName(), 0, 0)
+                .getCurrentUserMeetings(context.getUserPrincipal().getName(), 0, 0, null)
                 .size();
     }
 
@@ -78,10 +79,13 @@ public class MeetingService {
         return meeting;
     }
 
-    public List<Meeting> findMeetingRelatedToProject(String projectKey, int pageNumber, int offset) {
+    public List<Meeting> findMeetingRelatedToProject(String projectKey, int pageNumber, int offset, Sort sort) {
         Project project = projectService.findByKey(projectKey);
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         List<Meeting> meetings = meetingRepository
-                .getMeetingsRelatedToProjectWithPaging(projectKey, pageNumber, offset);
+                .getMeetingsRelatedToProjectWithPaging(projectKey, pageNumber, offset, sort);
         if (meetings.isEmpty()) {
             throw new NotFoundResourceException("Meetings are not found for current project.");
         }
@@ -91,25 +95,28 @@ public class MeetingService {
     public int findMeetingRelatedToProjectSize(String projectKey) {
         Project project = projectService.findByKey(projectKey);
         List<Meeting> meetings = meetingRepository
-                .getMeetingsRelatedToProjectWithPaging(projectKey, 0, 0);
+                .getMeetingsRelatedToProjectWithPaging(projectKey, 0, 0, null);
         return meetings.size();
     }
 
-    public List<Meeting> findMeetingsRelatedToCurrentUserAndProject(String projectKey, int page, int offset) {
+    public List<Meeting> findMeetingsRelatedToCurrentUserAndProject(String projectKey, int page, int offset, Sort sort) {
+        if(sort.getColumn().isEmpty()) {
+            sort.setColumn("id");
+        }
         List<Meeting> meetings = meetingRepository
-                .getMeetingsRelatedToProjectAndUser(context.getUserPrincipal().getName(), projectKey, page, offset);
+                .getMeetingsRelatedToProjectAndUser(context.getUserPrincipal().getName(), projectKey, page, offset, sort);
         return meetings;
     }
 
     public int findMeetingsRelatedToCurrentUserAndProjectSize(String projectKey) {
         return meetingRepository
-                .getMeetingsRelatedToProjectAndUser(context.getUserPrincipal().getName(), projectKey, 0, 0)
+                .getMeetingsRelatedToProjectAndUser(context.getUserPrincipal().getName(), projectKey, 0, 0, null)
                 .size();
     }
 
     public List<Meeting> findMeetingsRelatedToUserAndProject(String projectKey, String username) {
         return meetingRepository
-                .getMeetingsRelatedToProjectAndUser(username, projectKey, 0, 0);
+                .getMeetingsRelatedToProjectAndUser(username, projectKey, 0, 0, null);
     }
 
     public boolean isUserAssignedToMeeting(Long meetingId, Long userId) {
@@ -118,12 +125,22 @@ public class MeetingService {
 
     @Transactional
     public Meeting create(MeetingCreateDTO meetingCreateDTO) {
+        Meeting meeting = new Meeting();
+        meeting.setTitle(meetingCreateDTO.getTitle());
         Project project = projectService.findById(meetingCreateDTO.getProjectId());
-        Meeting newMeeting = new Meeting(meetingCreateDTO.getDate(), meetingCreateDTO.getTitle(),
-                project, Boolean.FALSE);
-        newMeeting.setTitle(meetingCreateDTO.getTitle());
-        meetingRepository.save(newMeeting);
-        return newMeeting;
+        if (!meetingCreateDTO.getDate().isEmpty()) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+            LocalDateTime localDateTime = LocalDateTime.parse(meetingCreateDTO.getDate(), dateTimeFormatter);
+            LocalDateTime newLocalDateTime = localDateTime.plusHours(3);
+            meeting.setDate(newLocalDateTime);
+        }
+        meeting.setProject(project);
+        meeting.setIsDeleted(Boolean.FALSE);
+        if (!meetingCreateDTO.getTitle().isEmpty()) {
+            meeting.setTitle(meetingCreateDTO.getTitle());
+        }
+        meetingRepository.save(meeting);
+        return meeting;
     }
 
     public Meeting update(Long id, MeetingUpdateDTO meetingUpdateDTO) {
@@ -131,7 +148,8 @@ public class MeetingService {
         if (!meetingUpdateDTO.getDate().isEmpty()) {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
             LocalDateTime localDateTime = LocalDateTime.parse(meetingUpdateDTO.getDate(), dateTimeFormatter);
-            updatedMeeting.setDate(localDateTime);
+            LocalDateTime newDateTime = localDateTime.plusHours(3);
+            updatedMeeting.setDate(newDateTime);
         }
         if (!meetingUpdateDTO.getTitle().isEmpty()) {
             updatedMeeting.setTitle(meetingUpdateDTO.getTitle());
@@ -171,13 +189,14 @@ public class MeetingService {
                     if (!(projectService.isUserInProject(meeting.getProject().getKey(), userToAssign.getUsername()))) {
                         throw new ValidationException("User is not in current project.");
                     }
-                    if(isUserAssignedToMeeting(meeting.getId(),user)) {
+                    if (isUserAssignedToMeeting(meeting.getId(), user)) {
                         throw new UserIsAlreadyAssignedToMeetingException("User is already assigned to this meeting.");
                     }
                     return userToAssign;
                 })
                 .collect(Collectors.toList());
-        if (meeting.getDate().isBefore(LocalDateTime.now())) {
+        LocalDateTime newLocalDateTime = meeting.getDate().plusHours(3);
+        if (newLocalDateTime.isBefore(LocalDateTime.now())) {
             throw new MeetingOutdatedException("Meeting is outdated.");
         }
         meeting.getUsers().addAll(usersToAssign);
@@ -197,8 +216,9 @@ public class MeetingService {
 
     public void deleteByUsername(String username) {
         List<Meeting> meetings = meetingRepository.findAllByUsername(username);
+        User currentUser = userService.getUserByUsername(username);
         meetings.forEach(meeting -> {
-            meeting.getUsers().clear();
+            meeting.getUsers().remove(currentUser);
             meetingRepository.save(meeting);
         });
     }

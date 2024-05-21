@@ -5,11 +5,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.cbg.projectmanagement.project_management.dto.PageFilterDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUnAssignUserDTO;
 import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
 import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
+import org.cbg.projectmanagement.project_management.dto.Sort;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.service.MeetingService;
 
 import java.util.stream.Collectors;
@@ -23,39 +26,19 @@ public class MeetingController {
     @Inject
     private MeetingMapper meetingMapper;
 
-    @GET
-    @Path("/administrator/get-all/{pageNumber}/{offset}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("administrator")
-    public Response getAll(@PathParam("pageNumber") int pageNumber, @PathParam("offset") int offset) {
-        return Response
-                .status(Response.Status.OK)
-                .entity(meetingService.findAll(pageNumber, offset)
-                        .stream()
-                        .map(meetingMapper::mapMeetingToMeetingDTO)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    @GET
-    @Path("/get-all-size")
-    @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"user", "administrator"})
-    public Response getAllSize() {
-        return Response
-                .status(Response.Status.OK)
-                .entity(meetingService.findAllSize())
-                .build();
-    }
-
-    @GET
-    @Path("/get-current-user-meetings/{projectKey}/{pageNumber}/{offset}")
+    @POST
+    @Path("/get-current-user-meetings/{projectKey}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({"administrator", "user"})
-    public Response getCurrentUserRelatedMeetings(@PathParam("projectKey") String projectKey, @PathParam("pageNumber") int page, @PathParam("offset") int offset) {
+    public Response getCurrentUserRelatedMeetings(@PathParam("projectKey") String projectKey, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProject(projectKey, page, offset)
+                .entity(meetingService.findMeetingsRelatedToCurrentUserAndProject(projectKey,
+                                pageFilterDTO.getPage(), pageFilterDTO.getOffset(), new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
@@ -76,7 +59,7 @@ public class MeetingController {
     @GET
     @Path("/administrator/get-by-id/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"user","administrator"})
+    @RolesAllowed({"user", "administrator"})
     public Response getById(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.OK)
@@ -85,14 +68,19 @@ public class MeetingController {
                 .build();
     }
 
-    @GET
-    @Path("/get-all-related-meetings/{page}/{offset}")
+    @POST
+    @Path("/get-all-related-meetings")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("user")
-    public Response getUserRelatedMeetings(@PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getUserRelatedMeetings(PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.getAllMeetingsToCurrentUser(page, offset)
+                .entity(meetingService.getAllMeetingsToCurrentUser(pageFilterDTO.getPage(), pageFilterDTO.getOffset(),
+                                new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))
@@ -110,14 +98,19 @@ public class MeetingController {
                 .build();
     }
 
-    @GET
-    @Path("/get-all-related-to-project/{projectKey}/{page}/{offset}")
+    @POST
+    @Path("/get-all-related-to-project/{projectKey}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({"user", "administrator"})
-    public Response getProjectRelatedMeetings(@PathParam("projectKey") String key, @PathParam("page") int page, @PathParam("offset") int offset) {
+    public Response getProjectRelatedMeetings(@PathParam("projectKey") String key, PageFilterDTO pageFilterDTO) {
+        SortOrder sortOrder = pageFilterDTO.getSortOrder().isEmpty() ?
+                SortOrder.DEFAULT:
+                SortOrder.valueOf(pageFilterDTO.getSortOrder().toUpperCase());
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingService.findMeetingRelatedToProject(key, page, offset)
+                .entity(meetingService.findMeetingRelatedToProject(key,
+                                pageFilterDTO.getPage(), pageFilterDTO.getOffset(), new Sort(pageFilterDTO.getSortColumn(), sortOrder))
                         .stream()
                         .map(meetingMapper::mapMeetingToMeetingDTO)
                         .collect(Collectors.toList()))

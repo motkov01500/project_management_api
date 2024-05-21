@@ -11,5 +11,7 @@ public class UserCreateDTO {
 
     private String username;
     private String password;
-    private String fullName;
+    private String confirmPassword;
+    private String fistName;
+    private String lastName;
 }

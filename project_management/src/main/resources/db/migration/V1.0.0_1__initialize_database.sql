@@ -7,7 +7,8 @@ CREATE TABLE userr(
                      id SERIAL NOT NULL PRIMARY KEY,
                      username VARCHAR(200) NOT NULL,
                      password VARCHAR(500) NOT NULL,
-                     full_name VARCHAR(120),
+                     first_name VARCHAR(100) NOT NULL,
+                     last_name VARCHAR(100) NOT NULL,
                      image_url VARCHAR,
                      role_id SERIAL
 );
