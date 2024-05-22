@@ -1,5 +1,8 @@
 package org.cbg.projectmanagement.project_management.security;
 
+import org.cbg.projectmanagement.project_management.entity.User;
+import org.cbg.projectmanagement.project_management.service.UserService;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,6 +25,9 @@ public class JWTAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     @Inject
     private TokenProvider tokenProvider;
+
+    @Inject
+    private UserService userService;
 
     @Override
     public AuthenticationStatus validateRequest(HttpServletRequest request, HttpServletResponse response, HttpMessageContext context) {

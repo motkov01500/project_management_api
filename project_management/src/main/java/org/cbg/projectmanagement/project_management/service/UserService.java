@@ -113,7 +113,8 @@ public class UserService {
     }
 
     public boolean isUserExistsAuthentication(String username) {
-        return userRepository.isUserExistsAuthentication(username);
+        return userRepository
+        .isUserExistsAuthentication(username);
     }
 
     @Transactional
