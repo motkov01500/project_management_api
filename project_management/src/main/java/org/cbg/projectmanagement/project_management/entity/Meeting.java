@@ -41,6 +41,9 @@ public class Meeting implements Serializable {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    @Transient
+    public int test;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, targetEntity = User.class)
     @JoinTable(name = "user_meeting",
             joinColumns = {@JoinColumn(name = "meeting_id")},

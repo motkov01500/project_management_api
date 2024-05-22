@@ -8,14 +8,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.cbg.projectmanagement.project_management.dto.PageFilterDTO;
 import org.cbg.projectmanagement.project_management.dto.Sort;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectAssignUserDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.project.ProjectUpdateDTO;
-import org.cbg.projectmanagement.project_management.dto.project.UnAssignUserFromProject;
+import org.cbg.projectmanagement.project_management.dto.project.*;
 import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.service.ProjectService;
+import org.cbg.projectmanagement.project_management.service.UserService;
 
 import java.util.stream.Collectors;
 
@@ -24,6 +22,9 @@ public class ProjectController {
 
     @Inject
     private ProjectService projectService;
+
+    @Inject
+    private UserService userService;
 
     @Inject
     private ProjectMapper projectMapper;
@@ -79,8 +80,7 @@ public class ProjectController {
     public Response getById(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.OK)
-                .entity(projectMapper
-                        .mapProjectToProjectDTO(projectService.findById(id)))
+                .entity(projectService.findByIdDto(id))
                 .build();
     }
 
@@ -115,11 +115,13 @@ public class ProjectController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({"user","administrator"})
     public Response getProjectByKey(@PathParam("projectKey") String projectKey) {
+        ProjectResponseDTO projectResponseDTO = projectMapper
+                .mapProjectToProjectDTO(projectService.findByKey(projectKey));
+                projectResponseDTO.setUsersAvailable(userService.findUsersNotAssignedToProjectSize(projectResponseDTO.getKey()));
         return Response
                 .status(Response.Status.OK)
-                .entity(projectMapper
-                        .mapProjectToProjectDTO(projectService.findByKey(projectKey))
-                ).build();
+                .entity(projectResponseDTO)
+                .build();
     }
 
     @POST

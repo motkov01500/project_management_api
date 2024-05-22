@@ -16,7 +16,5 @@ public class ProjectResponseDTO {
     private String key;
     private String title;
     private Boolean isDeleted;
-    private Boolean isUsersAvailable;
-    private RecentMeetingDTO mostRecentMeeting;
-    private int remainingTasks;
+    private int usersAvailable;
 }

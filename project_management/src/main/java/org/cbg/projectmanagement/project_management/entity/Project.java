@@ -37,6 +37,9 @@ public class Project implements Serializable {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
+    @Transient
+    public int remainingTasks;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "user_project",
             joinColumns = {@JoinColumn(name = "project_id")},

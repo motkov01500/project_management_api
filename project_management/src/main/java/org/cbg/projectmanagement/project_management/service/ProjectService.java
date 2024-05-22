@@ -10,6 +10,7 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.dto.project.*;
 import org.cbg.projectmanagement.project_management.entity.*;
+import org.cbg.projectmanagement.project_management.enums.SortOrder;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.exception.ProjectAlreadyExistsException;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyInProjectException;
@@ -17,6 +18,7 @@ import org.cbg.projectmanagement.project_management.mapper.MeetingMapper;
 import org.cbg.projectmanagement.project_management.mapper.ProjectMapper;
 import org.cbg.projectmanagement.project_management.repository.ProjectRepository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,26 +63,12 @@ public class ProjectService {
         return projectRepository.findAll(0, 0, null).size();
     }
 
-    public List<ProjectResponseDTO> findCurrentUserProjects(int pageNumber, int offside, Sort sort) {
+    public List<Project> findCurrentUserProjects(int pageNumber, int offside, Sort sort) {
         if (sort.getColumn().isEmpty()) {
             sort.setColumn("id");
         }
-        List<Project> projects = projectRepository
+        return projectRepository
                 .findProjectsRelatedToUser(context.getUserPrincipal().getName(), pageNumber, offside, sort);
-        List<ProjectResponseDTO> mappedProjects = projects
-                .stream()
-                .map(project -> projectMapper.mapProjectToProjectDTO(project))
-                .collect(Collectors.toList());
-        List<ProjectResponseDTO> finalMappedProjects = mappedProjects.stream().map(project -> {
-                    List<Meeting> meeting = meetingService.findMostRecentMeetingToUser(project.getKey());
-                    if (!meeting.isEmpty()) {
-                        project.setMostRecentMeeting(meetingMapper.mapMeetingToRecentMeetingDTO(meeting.get(0)));
-                    }
-                    project.setRemainingTasks(taskService.countNotFinishedTaskToCurrentUser(project.getKey()));
-                    return project;
-                })
-                .collect(Collectors.toList());
-        return finalMappedProjects;
     }
 
     public int findCurrentUserProjectsSize() {
@@ -94,6 +82,16 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundResourceException("Project was not found"));
         validateDeletedProject(project);
         return project;
+    }
+
+    public ProjectResponseDTO findByIdDto(Long id) {
+        Project project = projectRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundResourceException("Project was not found"));
+        validateDeletedProject(project);
+        ProjectResponseDTO projectResponseDTO = projectMapper.mapProjectToProjectDTO(project);
+        projectResponseDTO.setUsersAvailable(userService.findUsersNotAssignedToProject(projectResponseDTO.getKey()).size());
+        return projectResponseDTO;
     }
 
     public Project findByKey(String projectKey) {

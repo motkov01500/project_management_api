@@ -3,10 +3,7 @@ package org.cbg.projectmanagement.project_management.repository;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.*;
 import org.cbg.projectmanagement.project_management.dto.Sort;
-import org.cbg.projectmanagement.project_management.entity.Project;
-import org.cbg.projectmanagement.project_management.entity.Project_;
-import org.cbg.projectmanagement.project_management.entity.User;
-import org.cbg.projectmanagement.project_management.entity.User_;
+import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.enums.SortOrder;
 
 import java.util.List;
@@ -38,7 +35,7 @@ public class ProjectRepository extends BaseRepository<Project> {
         Predicate relatedToUserProjects = criteriaBuilder.equal(projectUserJoin.get(User_.username), username);
         query.select(projectRoot)
                 .where(criteriaBuilder.and(relatedToUserProjects, notDeletedProjects));
-        if (sort != null && !SortOrder.DEFAULT.equals(sort.getOrder())) {
+        if (sort != null && !SortOrder.DEFAULT.equals(sort.getOrder()) && sort.getColumn().equals("remainingTasks")) {
             final Path<Object> sortColumn = projectRoot.get(sort.getColumn());
             query.orderBy(SortOrder.ASCENDING.equals(sort.getOrder()) ?
                     criteriaBuilder.asc(sortColumn) :

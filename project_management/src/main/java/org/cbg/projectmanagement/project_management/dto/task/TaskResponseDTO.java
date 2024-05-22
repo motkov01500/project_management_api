@@ -16,7 +16,7 @@ public class TaskResponseDTO {
     private String title;
     private int progress;
     private int initialEstimation;
-    private Boolean isUsersAvailable;
+    private int usersAvailable;
     private int hoursSpent;
     private String taskStatus;
     private Boolean isDeleted;

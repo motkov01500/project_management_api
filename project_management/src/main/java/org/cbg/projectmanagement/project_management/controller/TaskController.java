@@ -120,8 +120,7 @@ public class TaskController {
     public Response getById(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.OK)
-                .entity(taskMapper
-                        .mapTaskToTaskDTO(taskService.findById(id)))
+                .entity(taskService.findByIdDTO(id))
                 .build();
     }
 

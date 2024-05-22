@@ -63,8 +63,7 @@ public class MeetingController {
     public Response getById(@PathParam("id") Long id) {
         return Response
                 .status(Response.Status.OK)
-                .entity(meetingMapper
-                        .mapMeetingToMeetingDTO(meetingService.findById(id)))
+                .entity(meetingService.findByIdDTO(id))
                 .build();
     }
 

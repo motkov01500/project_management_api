@@ -84,6 +84,15 @@ public class UserService {
         }
         return users;
     }
+    @Transactional
+    public int findUsersNotAssignedToTaskSize(Long taskId) {
+        Task currentTask = taskService.findById(taskId);
+        Project project = currentTask.getProject();
+        List<User> users = userRepository
+                .getUsersRelatedToProjectAndNotAddedToTask(taskId, project.getKey());
+        return users.size();
+    }
+
 
     public List<User> findUsersRelatedToTask(Long taskId, int page, int offset,Sort sort) {
         if(sort.getColumn().isEmpty()) {
@@ -124,6 +133,14 @@ public class UserService {
     }
 
     @Transactional
+    public int findUsersNotAssignedToMeetingSize(Long meetingId) {
+        Meeting meeting = meetingService.findById(meetingId);
+        Project project = meeting.getProject();
+        List<User> users = userRepository.getUsersRelatedToProjectAndNotAddedToMeeting(meetingId, project.getKey());
+        return users.size();
+    }
+
+    @Transactional
     public boolean isUsersAvailableForAssignToMeeting(Long meetingId) {
         Meeting meeting = meetingService.findById(meetingId);
         Project project = meeting.getProject();
@@ -139,6 +156,13 @@ public class UserService {
             throw new NotFoundResourceException("Users are not available.");
         }
         return users;
+    }
+
+    @Transactional
+    public int findUsersNotAssignedToProjectSize(String projectKey) {
+        Project project = projectService.findByKey(projectKey);
+        List<User> users = userRepository.getUsersNotToProject(project.getKey());
+        return users.size();
     }
 
     public boolean isUsersAvailableForAssignToProject(String projectKey) {
@@ -195,11 +219,11 @@ public class UserService {
         if(!userCreateDTO.getConfirmPassword().equals(userCreateDTO.getPassword())) {
             throw new ValidationException("Passwords do not match. Please try again.");
         }
-        if (userCreateDTO.getFistName().isEmpty() || userCreateDTO.getLastName().isEmpty()) {
+        if (userCreateDTO.getFirstName().isEmpty() || userCreateDTO.getLastName().isEmpty()) {
             throw new ValidationException("You must enter the first name and last name of user.");
         }
         User user = new User(userCreateDTO.getUsername(), hashedPassword,
-                userCreateDTO.getFistName(), userCreateDTO.getLastName(), role, Boolean.FALSE);
+                userCreateDTO.getFirstName(), userCreateDTO.getLastName(), role, Boolean.FALSE);
         user.setImageUrl("https://www.idahoagc.org/sites/default/files/default_images/default-medium.png");
         userRepository.save(user);
         return user;

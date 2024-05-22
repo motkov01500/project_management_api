@@ -7,10 +7,7 @@ import jakarta.json.JsonObject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
-import org.cbg.projectmanagement.project_management.dto.meeting.MeetingAssignUserDTO;
-import org.cbg.projectmanagement.project_management.dto.meeting.MeetingCreateDTO;
-import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUnAssignUserDTO;
-import org.cbg.projectmanagement.project_management.dto.meeting.MeetingUpdateDTO;
+import org.cbg.projectmanagement.project_management.dto.meeting.*;
 import org.cbg.projectmanagement.project_management.entity.Meeting;
 import org.cbg.projectmanagement.project_management.entity.Project;
 import org.cbg.projectmanagement.project_management.entity.User;
@@ -30,9 +27,7 @@ import java.util.stream.Collectors;
 
 @Stateless
 public class MeetingService {
-    /**
-     * TODO VIEW for required
-     */
+
     @Inject
     private MeetingRepository meetingRepository;
 
@@ -77,6 +72,18 @@ public class MeetingService {
             throw new NotFoundResourceException("Meeting was not found");
         }
         return meeting;
+    }
+
+    public MeetingResponseDTO findByIdDTO(Long id) {
+        Meeting meeting = meetingRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundResourceException("Meeting was not found"));
+        if (meeting.getIsDeleted()) {
+            throw new NotFoundResourceException("Meeting was not found");
+        }
+        MeetingResponseDTO meetingResponseDTO = meetingMapper.mapMeetingToMeetingDTO(meeting);
+        meetingResponseDTO.setUsersAvailable(userService.findUsersNotAssignedToMeetingSize(meeting.getId()));
+        return meetingResponseDTO;
     }
 
     public List<Meeting> findMeetingRelatedToProject(String projectKey, int pageNumber, int offset, Sort sort) {

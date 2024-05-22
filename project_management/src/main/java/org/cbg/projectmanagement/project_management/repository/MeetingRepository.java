@@ -1,17 +1,22 @@
 package org.cbg.projectmanagement.project_management.repository;
 
 import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.cbg.projectmanagement.project_management.dto.Sort;
 import org.cbg.projectmanagement.project_management.entity.*;
 import org.cbg.projectmanagement.project_management.enums.SortOrder;
+import org.cbg.projectmanagement.project_management.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Stateless
 public class MeetingRepository extends BaseRepository<Meeting> {
+
+    @Inject
+    private UserService userService;
 
     public MeetingRepository() {
         super(Meeting.class);

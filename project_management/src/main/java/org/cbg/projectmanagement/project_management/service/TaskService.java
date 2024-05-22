@@ -16,6 +16,7 @@ import org.cbg.projectmanagement.project_management.enums.TaskStatus;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 import org.cbg.projectmanagement.project_management.exception.UserAlreadyAssignedToTaskException;
 import org.cbg.projectmanagement.project_management.exception.ValidationException;
+import org.cbg.projectmanagement.project_management.mapper.TaskMapper;
 import org.cbg.projectmanagement.project_management.repository.TaskRepository;
 
 import java.util.List;
@@ -29,6 +30,9 @@ public class TaskService {
 
     @Inject
     private ProjectService projectService;
+
+    @Inject
+    private TaskMapper taskMapper;
 
     @Inject
     private UserService userService;
@@ -82,6 +86,18 @@ public class TaskService {
             throw new NotFoundResourceException("Task was not found");
         }
         return task;
+    }
+
+    public TaskResponseDTO findByIdDTO(Long id) {
+        Task task = taskRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundResourceException("Task was not found"));
+        if (task.getIsDeleted()) {
+            throw new NotFoundResourceException("Task was not found");
+        }
+        TaskResponseDTO taskResponseDTO = taskMapper.mapTaskToTaskDTO(task);
+        taskResponseDTO.setUsersAvailable(userService.findUsersNotAssignedToTaskSize(task.getId()));
+        return taskResponseDTO;
     }
 
     @Transactional
