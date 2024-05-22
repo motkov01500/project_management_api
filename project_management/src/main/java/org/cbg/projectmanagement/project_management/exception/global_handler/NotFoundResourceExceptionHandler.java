@@ -6,7 +6,6 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import org.cbg.projectmanagement.project_management.exception.NotFoundResourceException;
 
-//TODO: CREATE A DEFAULT TO BE FOR 500. And logger(LogBack). I18NInternationalization
 @Provider
 public class NotFoundResourceExceptionHandler implements ExceptionMapper<NotFoundResourceException> {
 

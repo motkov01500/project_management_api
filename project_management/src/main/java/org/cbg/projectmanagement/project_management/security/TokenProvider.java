@@ -1,19 +1,19 @@
 package org.cbg.projectmanagement.project_management.security;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.cbg.projectmanagement.project_management.service.RoleService;
+import org.cbg.projectmanagement.project_management.service.UserService;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import org.cbg.projectmanagement.project_management.entity.User;
-import org.cbg.projectmanagement.project_management.service.RoleService;
-import org.cbg.projectmanagement.project_management.service.UserService;
-
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Stateless
 public class TokenProvider {

@@ -24,7 +24,8 @@ public class AuthenticationStoreImpl implements IdentityStore {
     public CredentialValidationResult validate(Credential credential) {
         CredentialValidationResult result;
         UsernamePasswordCredential usernamePassword = (UsernamePasswordCredential) credential;
-        boolean isUserExists = userService.isUserExists(usernamePassword.getCaller());
+        boolean isUserExists = userService
+        .isUserExistsAuthentication(usernamePassword.getCaller());
         if(isUserExists) {
             User user = userService.getUserByUsername(usernamePassword.getCaller());
             if (userService.checkPassword(usernamePassword.getPasswordAsString(), user.getPassword())) {;

@@ -112,6 +112,10 @@ public class UserService {
         return userRepository.isUserExists(username);
     }
 
+    public boolean isUserExistsAuthentication(String username) {
+        return userRepository.isUserExistsAuthentication(username);
+    }
+
     @Transactional
     public boolean isUsersAvailableForAssignToTak(Long taskId) {
         Task currentTask = taskService.findById(taskId);

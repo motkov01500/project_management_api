@@ -143,6 +143,17 @@ public class UserRepository extends BaseRepository<User> {
         return !getEntityByCriteria(query).getResultList().isEmpty();
     }
 
+    public boolean isUserExistsAuthentication(String username) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaQuery<User> query = getCriteriaQuery();
+        Root<User> userRoot = query.from(User.class);
+        Predicate findUser = criteriaBuilder.equal(userRoot.get(User_.username), username);
+        Predicate notDeletedUser = criteriaBuilder.notEqual(userRoot.get(User_.IS_DELETED), true);
+        query.select(userRoot)
+                .where(criteriaBuilder.and(findUser,notDeletedUser));
+        return !getEntityByCriteria(query).getResultList().isEmpty();
+    }
+
     public List<User> findAll(int pageNumber, int offset, Sort sort) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery<User> query = getCriteriaQuery();
