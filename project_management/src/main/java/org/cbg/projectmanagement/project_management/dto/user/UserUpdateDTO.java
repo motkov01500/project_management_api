@@ -14,5 +14,4 @@ public class UserUpdateDTO {
     private String confirmPassword;
     private String firstName;
     private String lastName;
-//    private String roleName;
 }

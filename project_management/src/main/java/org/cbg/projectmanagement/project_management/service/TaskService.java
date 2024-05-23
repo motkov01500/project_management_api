@@ -61,9 +61,6 @@ public class TaskService {
         }
         List<Task> tasks = taskRepository.getAllTasksRelatedToProject(projectKey, page, offside, sort);
         Project project = projectService.findByKey(projectKey);
-        if (tasks.isEmpty()) {
-            throw new NotFoundResourceException("Tasks are not found for current project.");
-        }
         return tasks;
     }
 

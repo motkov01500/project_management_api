@@ -93,9 +93,6 @@ public class MeetingService {
         }
         List<Meeting> meetings = meetingRepository
                 .getMeetingsRelatedToProjectWithPaging(projectKey, pageNumber, offset, sort);
-        if (meetings.isEmpty()) {
-            throw new NotFoundResourceException("Meetings are not found for current project.");
-        }
         return meetings;
     }
 
