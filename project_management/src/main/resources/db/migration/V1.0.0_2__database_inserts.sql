@@ -7,23 +7,26 @@ INSERT INTO userr (username, password, first_name,last_name, image_url, role_id)
 VALUES ('admin', '$2a$12$D9x15f2upu7K4iimh1J5aOu7UhWp5zBmYdbMNZC/cVIMwTB9vPZxq', 'Peter', 'Petrov', 'https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 1);
 INSERT INTO userr (username, password, first_name,last_name,image_url, role_id)
 VALUES ('liubaka', '$2a$12$QmfznLTYW0MNCZIcnh9db.taZpXwjvzEILb9eqSbMDOcX6dbnTzxu', 'Lyubo', 'Motkov','https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 2);
+INSERT INTO userr (username, password, first_name,last_name,image_url, role_id)
+VALUES ('Test', '$2a$12$QmfznLTYW0MNCZIcnh9db.taZpXwjvzEILb9eqSbMDOcX6dbnTzxu', 'Test', 'Testov','https://www.idahoagc.org/sites/default/files/default_images/default-medium.png', 2);
+
 
 INSERT INTO project (key, title)
 VALUES ('edno', 'mercedes');
 INSERT INTO project (key, title)
 VALUES ('dve', 'porsche');
 INSERT INTO project (key, title)
-VALUES ('three', 'porsche');
+VALUES ('three', 'audi');
 INSERT INTO project (key, title)
-VALUES ('four', 'porsche');
+VALUES ('four', 'honda');
 INSERT INTO project (key, title)
-VALUES ('five', 'porsche');
+VALUES ('five', 'toyota');
 INSERT INTO project (key, title)
-VALUES ('six', 'porsche');
+VALUES ('six', 'ford');
 INSERT INTO project (key, title)
-VALUES ('seven', 'porsche');
+VALUES ('seven', 'opel');
 INSERT INTO project (key, title)
-VALUES ('eight', 'porsche');
+VALUES ('eight', 'renault');
 
 INSERT INTO meeting(date, title, duration, project_id)
 VALUES ('2004-10-19 10:23:54', 'Daily meeting', 30, 1);
@@ -40,18 +43,22 @@ VALUES ('Create a project',20, 20, 5, 2, 'TODO');
 INSERT INTO user_task(userr_id, task_id)
 VALUES (2, 1);
 INSERT INTO user_task(userr_id, task_id)
-VALUES (2, 2);
+VALUES (3, 2);
 
 INSERT INTO user_project(userr_id, project_id)
-VALUES (1, 1);
+VALUES (3, 1);
 INSERT INTO user_project(userr_id, project_id)
 VALUES (2, 1);
 INSERT INTO user_project(userr_id, project_id)
-VALUES (2, 3);
+VALUES (3, 2);
+INSERT INTO user_project(userr_id, project_id)
+VALUES (3, 3);
 INSERT INTO user_project(userr_id, project_id)
 VALUES (2, 4);
 INSERT INTO user_project(userr_id, project_id)
 VALUES (2, 5);
+INSERT INTO user_project(userr_id, project_id)
+VALUES (3, 6);
 INSERT INTO user_project(userr_id, project_id)
 VALUES (2, 6);
 INSERT INTO user_project(userr_id, project_id)
@@ -63,4 +70,4 @@ VALUES (2, 8);
 INSERT INTO user_meeting(userr_id, meeting_id)
 VALUES (2, 1);
 INSERT INTO user_meeting(userr_id, meeting_id)
-VALUES (2, 2);
+VALUES (3, 1);
