@@ -33,7 +33,7 @@ VALUES ('2004-10-19 10:23:54', 'Daily meeting', 30, 1);
 INSERT INTO meeting(date, title, duration, project_id)
 VALUES ('2024-3-19 10:00:00', 'Docker Presentation', 20, 2);
 INSERT INTO meeting(date, title, duration, project_id)
-VALUES ('2024-5-15 10:00:00', 'Java Threads', 70, 2);
+VALUES ('2024-5-30 10:00:00', 'Java Threads', 70, 2);
 
 INSERT INTO task(title,progress, initial_estimation, hours_spent, project_id, task_status)
 VALUES ('Update logic',0, 20, 0, 1, 'TODO');
@@ -71,3 +71,5 @@ INSERT INTO user_meeting(userr_id, meeting_id)
 VALUES (2, 1);
 INSERT INTO user_meeting(userr_id, meeting_id)
 VALUES (3, 1);
+INSERT INTO user_meeting(userr_id, meeting_id)
+VALUES(3,3)
